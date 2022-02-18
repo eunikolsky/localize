@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		077C9FC227BFAC0A008EE23B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077C9FC127BFAC0A008EE23B /* main.swift */; };
 		077C9FD027BFACBB008EE23B /* localizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077C9FCF27BFACBB008EE23B /* localizeTests.swift */; };
+		077C9FD827BFADBA008EE23B /* localize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077C9FD727BFADBA008EE23B /* localize.swift */; };
+		077C9FDB27BFADBE008EE23B /* localize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077C9FD727BFADBA008EE23B /* localize.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,6 +31,7 @@
 		077C9FCD27BFACBB008EE23B /* localizeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = localizeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		077C9FCF27BFACBB008EE23B /* localizeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = localizeTests.swift; sourceTree = "<group>"; };
 		077C9FD127BFACBB008EE23B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		077C9FD727BFADBA008EE23B /* localize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = localize.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				077C9FC127BFAC0A008EE23B /* main.swift */,
+				077C9FD727BFADBA008EE23B /* localize.swift */,
 			);
 			path = localize;
 			sourceTree = "<group>";
@@ -172,6 +176,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				077C9FD827BFADBA008EE23B /* localize.swift in Sources */,
 				077C9FC227BFAC0A008EE23B /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -180,6 +185,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				077C9FDB27BFADBE008EE23B /* localize.swift in Sources */,
 				077C9FD027BFACBB008EE23B /* localizeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
