@@ -23,4 +23,8 @@ class localizeTests: XCTestCase {
     func testShouldPreserveEscaping() {
         XCTAssertEqual(localize(#"\tHello\r\n \"World\"\b\\"#), #"\\\b\"DLROw\" \n\rOLLEh\t"#)
     }
+
+    func testShouldPreservePHPStylePlaceholders() {
+        XCTAssertEqual(localize(#"Hello ($wor_LD\") $y"#), #"$y )\"$wor_LD( OLLEh"#)
+    }
 }
