@@ -19,4 +19,8 @@ class localizeTests: XCTestCase {
     func testShouldPreserveEmptyInput() {
         XCTAssertEqual(localize(""), "")
     }
+
+    func testShouldPreserveEscaping() {
+        XCTAssertEqual(localize(#"\tHello\r\n \"World\"\b\\"#), #"\\\b\"DLROw\" \n\rOLLEh\t"#)
+    }
 }
