@@ -8,7 +8,11 @@
 import XCTest
 
 class localizeTests: XCTestCase {
-    func testShouldReverseInput() {
-        XCTAssertEqual(localize("abcd0"), "0dcba")
+    func testShouldReverseAndFlipCase() {
+        XCTAssertEqual(localize("aBcD"), "dCbA")
+    }
+
+    func testShouldNotChangeNonCasedCharacters() {
+        XCTAssertEqual(localize("0_- !?%8"), "8%?! -_0")
     }
 }
