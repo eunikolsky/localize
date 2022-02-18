@@ -7,5 +7,6 @@
 
 import Foundation
 
-print("Hello, World!")
-
+let input = String(data: try FileHandle.standardInput.readToEnd() ?? Data(),
+                   encoding: .utf8)!
+print(localize(input))
