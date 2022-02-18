@@ -27,4 +27,8 @@ class localizeTests: XCTestCase {
     func testShouldPreservePHPStylePlaceholders() {
         XCTAssertEqual(localize(#"Hello ($wor_LD\") $y"#), #"$y )\"$wor_LD( OLLEh"#)
     }
+
+    func testShouldPreserveUnicode() {
+        XCTAssertEqual(localize(#"ёHello world \"$xyz\" ёЁ ❓🚜 й ▶️"#), #"▶️ Й 🚜❓ ёЁ \"$xyz\" DLROW OLLEhЁ"#)
+    }
 }
