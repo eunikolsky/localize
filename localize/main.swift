@@ -9,4 +9,5 @@ import Foundation
 
 let input = String(data: try FileHandle.standardInput.readToEnd() ?? Data(),
                    encoding: .utf8)!
-print(localize(input))
+let localized = localize(input).data(using: .utf8)!
+FileHandle.standardOutput.write(localized)
