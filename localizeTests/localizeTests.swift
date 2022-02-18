@@ -15,4 +15,8 @@ class localizeTests: XCTestCase {
     func testShouldNotChangeNonCasedCharacters() {
         XCTAssertEqual(localize("0_- !?%8"), "8%?! -_0")
     }
+
+    func testShouldPreserveEmptyInput() {
+        XCTAssertEqual(localize(""), "")
+    }
 }
