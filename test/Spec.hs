@@ -19,4 +19,7 @@ tests = testGroup "localize"
 
     , testCase "preserves escaped characters" $
             localize "\\tHello\\r\\n \\\"World\\\"\\b\\\\" @?= "\\\\\\b\\\"DLROw\\\" \\n\\rOLLEh\\t"
+
+    , testCase "preserves PHP-style placeholders" $
+            localize "Hello ($wor_LD\\\") $y" @?= "$y )\\\"$wor_LD( OLLEh"
     ]

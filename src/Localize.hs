@@ -4,9 +4,10 @@ module Localize
 
 import Data.Char (isLower, toLower, toUpper)
 import Data.Function ((&))
+import Data.Maybe (fromMaybe)
 import Data.Void (Void)
 import Text.Megaparsec hiding (Token)
-import Data.Maybe (fromMaybe)
+import Text.Megaparsec.Char (letterChar)
 
 -- | Type of parsers used here: works on regular @String@s and doesn't
 -- have any special errors.
@@ -32,7 +33,7 @@ parseString s = parseMaybe (many token) s
     where
         token :: Parser Token
         token
-            = TokString <$> try jsonEscapedChar
+            = TokString <$> try (jsonEscapedChar <|> phpStylePlaceholder)
             <|> TokChar <$> anySingle
         or = fromMaybe
         dumbSplit = fmap TokChar
@@ -49,3 +50,11 @@ jsonEscapedChar = do
     backslash <- single '\\'
     cont <- oneOf ['t', 'r', 'n', 'b', '"']
     pure $ backslash : [cont]
+
+-- | Parses a PHP-style placeholder, which looks like `$foo` where the
+-- allowed characters after `$` are big/small letters and underscore.
+phpStylePlaceholder :: Parser String
+phpStylePlaceholder = do
+    start <- single '$'
+    id <- some $ letterChar <|> single '_'
+    pure $ start : id
