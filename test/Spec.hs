@@ -22,4 +22,7 @@ tests = testGroup "localize"
 
     , testCase "preserves PHP-style placeholders" $
             localize "Hello ($wor_LD\\\") $y" @?= "$y )\\\"$wor_LD( OLLEh"
+
+    , testCase "preserves unicode characters" $
+            localize "ёHello world \\\"$xyz\\\" ёЁ ❓🚜 й ❄" @?= "❄ Й 🚜❓ ёЁ \\\"$xyz\\\" DLROW OLLEhЁ"
     ]
