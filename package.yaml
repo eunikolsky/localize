@@ -29,7 +29,7 @@ library:
   - megaparsec
 
 executables:
-  localizehs-exe:
+  localize:
     main:                Main.hs
     source-dirs:         app
     ghc-options:

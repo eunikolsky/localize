@@ -36,7 +36,7 @@ library
     , text
   default-language: Haskell2010
 
-executable localizehs-exe
+executable localize
   main-is: Main.hs
   other-modules:
       Paths_localizehs
