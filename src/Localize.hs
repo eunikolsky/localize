@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Localize
     ( localize
     ) where
@@ -10,7 +12,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text, concat, pack, singleton)
 import Data.Void (Void)
 import Text.Megaparsec hiding (Token)
-import Text.Megaparsec.Char (letterChar)
+import Text.Megaparsec.Char (letterChar, string)
 
 -- | Type of parsers used here: works on @Text@s and doesn't
 -- have any special errors.
@@ -22,8 +24,9 @@ data Token
     | TokString Text  -- ^ An immutable string that will be kept as is.
 
 -- | "Localizes" the given string by reversing it and flipping the case
--- of every character (upper<->lower). Escaped characters are preserved
--- as is (e.g. @\n@).
+-- of every character (upper<->lower). Escaped characters (e.g. @\n@, @\"@),
+-- PHP-style placeholders (`$foo_BAR`) and React-style placeholders
+-- (`{{foo_BAR}}`) are preserved as is.
 localize :: Text -> Text
 localize = concat . fmap flipCase . reverse . parseString
 
@@ -36,7 +39,7 @@ parseString s = parseMaybe (many token) s
     where
         token :: Parser Token
         token
-            = TokString <$> try (jsonEscapedChar <|> phpStylePlaceholder)
+            = TokString <$> try (choice [jsonEscapedChar, phpStylePlaceholder, reactStylePlaceholder])
             <|> TokChar <$> anySingle
         or = fromMaybe
 
@@ -60,3 +63,10 @@ phpStylePlaceholder = do
     start <- single '$'
     id <- some $ letterChar <|> single '_'
     pure . pack $ start : id
+
+-- | Parses a React-style placeholder, which looks like `{{foo}}`.
+reactStylePlaceholder :: Parser Text
+reactStylePlaceholder = do
+    start <- string "{{"
+    (id, end) <- someTill_ anySingle (string "}}")
+    pure $ mconcat [start, pack id, end]

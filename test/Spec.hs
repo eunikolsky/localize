@@ -25,6 +25,12 @@ tests = testGroup "localize"
     , testCase "preserves PHP-style placeholders" $
             localize "Hello ($wor_LD\\\") $y" @?= "$y )\\\"$wor_LD( OLLEh"
 
+    , testCase "preserves React-style placeholders" $
+            localize "Hello {{wor_LD}}\\\" {{count}}" @?= "{{count}} \\\"{{wor_LD}} OLLEh"
+
+    , testCase "ignores incomplete React-style placeholders" $
+            localize "Hello {{wor_{{LD}}\\\" {{count" @?= "TNUOC{{ \\\"{{wor_{{LD}} OLLEh"
+
     , testCase "preserves unicode characters" $
             localize "ёHello world \\\"$xyz\\\" ёЁ ❓🚜 й ❄" @?= "❄ Й 🚜❓ ёЁ \\\"$xyz\\\" DLROW OLLEhЁ"
     ]
