@@ -1,4 +1,7 @@
 module Main where
 
+import Data.Text.IO as TIO
+import Localize (localize)
+
 main :: IO ()
-main = pure ()
+main = TIO.interact localize
