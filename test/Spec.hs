@@ -16,4 +16,7 @@ tests = testGroup "localize"
 
     , testCase "does not change non-cased characters" $
             localize "0_- !?%8" @?= "8%?! -_0"
+
+    , testCase "preserves escaped characters" $
+            localize "\\tHello\\r\\n \\\"World\\\"\\b\\\\" @?= "\\\\\\b\\\"DLROw\\\" \\n\\rOLLEh\\t"
     ]
