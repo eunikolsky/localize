@@ -1,7 +1,16 @@
 module Main where
 
-import Data.Text.IO as TIO
+import Data.Text.IO as TIO (interact)
+import Data.Version (showVersion)
+import System.Environment (getArgs)
+
+import Paths_localizehs (version)
 import Localize (localize)
 
 main :: IO ()
-main = TIO.interact localize
+main = do
+    args <- getArgs
+    case args of
+        [] -> TIO.interact localize
+        ["--version"] -> putStrLn $ showVersion version
+        _ -> error "Unrecognized arguments"
