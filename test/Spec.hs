@@ -1,11 +1,14 @@
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Localize
+
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests"
+tests = testGroup "localize"
     [
-        testCase "test" $ reverse [1, 2, 3] @?= [3, 2, 1]
+        testCase "returns empty string for empty input" $
+            localize "" @?= ""
     ]

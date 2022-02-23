@@ -25,7 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Localize
   other-modules:
       Paths_localizehs
   hs-source-dirs:
