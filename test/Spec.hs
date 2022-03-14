@@ -33,4 +33,7 @@ tests = testGroup "localize"
 
     , testCase "preserves unicode characters" $
             localize "ёHello world \\\"$xyz\\\" ёЁ ❓🚜 й ❄" @?= "❄ Й 🚜❓ ёЁ \\\"$xyz\\\" DLROW OLLEhЁ"
+
+    , testCase "preserves %count% PHP placeholders" $
+            localize "Hello %count% world" @?= "DLROW %count% OLLEh"
     ]

@@ -39,7 +39,12 @@ parseString s = parseMaybe (many token) s
     where
         token :: Parser Token
         token
-            = TokString <$> try (choice [jsonEscapedChar, phpStylePlaceholder, reactStylePlaceholder])
+            = TokString <$> try (choice
+                [ jsonEscapedChar
+                , phpStylePlaceholder
+                , reactStylePlaceholder
+                , countPHPPlaceholder
+                ])
             <|> TokChar <$> anySingle
         or = fromMaybe
 
@@ -70,3 +75,7 @@ reactStylePlaceholder = do
     start <- string "{{"
     (id, end) <- someTill_ anySingle (string "}}")
     pure $ mconcat [start, pack id, end]
+
+-- | Parses the @%count%@ PHP placeholder for pluralization support.
+countPHPPlaceholder :: Parser Text
+countPHPPlaceholder = string "%count%"
