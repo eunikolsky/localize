@@ -36,4 +36,7 @@ tests = testGroup "localize"
 
     , testCase "preserves %count% PHP placeholders" $
             localize "Hello %count% world" @?= "DLROW %count% OLLEh"
+
+    , testCase "keeps the order of groups separated by pipe" $
+            localize "Hello ONE world? $foo|Hello %count% worlds!|other" @?= "$foo ?DLROW eno OLLEh|!SDLROW %count% OLLEh|REHTO"
     ]

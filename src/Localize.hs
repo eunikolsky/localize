@@ -9,10 +9,10 @@ import Prelude hiding (concat)
 import Data.Char (isLower, toLower, toUpper)
 import Data.Function ((&))
 import Data.Maybe (fromMaybe)
-import Data.Text (Text, concat, pack, singleton)
+import Data.Text (Text, concat, intercalate, pack, singleton)
 import Data.Void (Void)
 import Text.Megaparsec hiding (Token)
-import Text.Megaparsec.Char (letterChar, string)
+import Text.Megaparsec.Char (char, letterChar, string)
 
 -- | Type of parsers used here: works on @Text@s and doesn't
 -- have any special errors.
@@ -23,20 +23,33 @@ data Token
     = TokChar Char    -- ^ A char that will be flipped and reversed.
     | TokString Text  -- ^ An immutable string that will be kept as is.
 
+-- | A list of tokens located between @tokenGroupSeparator@s.
+newtype TokenGroup = TokenGroup { unTokenGroup :: [Token] }
+
+-- | The pipe @|@ separator of token groups for PHP.
+tokenGroupSeparator :: Char
+tokenGroupSeparator = '|'
+
 -- | "Localizes" the given string by reversing it and flipping the case
 -- of every character (upper<->lower). Escaped characters (e.g. @\n@, @\"@),
 -- PHP-style placeholders (`$foo_BAR`) and React-style placeholders
 -- (`{{foo_BAR}}`) are preserved as is.
 localize :: Text -> Text
-localize = concat . fmap flipCase . reverse . parseString
+localize = intercalate (singleton tokenGroupSeparator) . fmap processGroup . parseString
+    where
+        processGroup :: TokenGroup -> Text
+        processGroup = concat . fmap flipCase . reverse . unTokenGroup
 
--- | Parses the input string into a list of tokens.
-parseString :: Text -> [Token]
-parseString s = parseMaybe (many token) s
+-- | Parses the input string into a list of token groups.
+parseString :: Text -> [TokenGroup]
+parseString s = parseMaybe (tokenGroup `sepBy` char tokenGroupSeparator) s
     -- I don't expect this parser to fail on any input, but if it does,
     -- leave the input as is.
-    & or [TokString s]
+    & or [TokenGroup [TokString s]]
     where
+        tokenGroup :: Parser TokenGroup
+        tokenGroup = TokenGroup <$> many token
+
         token :: Parser Token
         token
             = TokString <$> try (choice
@@ -45,7 +58,8 @@ parseString s = parseMaybe (many token) s
                 , reactStylePlaceholder
                 , countPHPPlaceholder
                 ])
-            <|> TokChar <$> anySingle
+            <|> TokChar <$> anySingleBut tokenGroupSeparator
+
         or = fromMaybe
 
 -- | Flips the case of the given token.
