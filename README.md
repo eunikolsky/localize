@@ -26,7 +26,7 @@ This requires a more advanced program, which is IMHO more convenient to write in
 
 * Build the project with `stack build`.
 
-* Install the compiled executable with `stack install localizehs:localize`.
+* Install the compiled executable with `stack install localize:localize`.
 
 The program is installed into `~/.local/bin/` by default, so make sure it's added to your `$PATH`. Verify it with:
 

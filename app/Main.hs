@@ -4,7 +4,7 @@ import Data.Text.IO as TIO (interact)
 import Data.Version (showVersion)
 import System.Environment (getArgs)
 
-import Paths_localizehs (version)
+import Paths_localize (version)
 import Localize (localize)
 
 main :: IO ()
