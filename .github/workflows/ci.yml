@@ -1,0 +1,30 @@
+# based on https://kodimensional.dev/github-actions
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  stack:
+    name: stack
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: haskell/actions/setup@v1
+        with:
+          enable-stack: true
+
+      - uses: actions/cache@v2
+        name: Cache ~/.stack
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-stack
+
+      - name: Build
+        run: stack build --system-ghc
+
+      - name: Test
+        run: stack test --system-ghc

@@ -1,5 +1,7 @@
 # `localize`
 
+[![Github CI](https://github.com/eunikolsky/localize/workflows/CI/badge.svg)](https://github.com/eunikolsky/localize/actions)
+
 ## Purpose
 
 `localize` helps with "fake localization". That is if your program uses English and you need to support other languages (say, German), but you don't have translated strings immediately available, you need a way to see which strings are not localized yet.
