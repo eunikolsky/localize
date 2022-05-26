@@ -1,15 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 
+import Data.Aeson
+import Data.Maybe (fromJust)
 import Test.Tasty
 import Test.Tasty.HUnit
+import Text.RawString.QQ (r)
+import qualified Data.ByteString.Lazy as BL
 
-import Localize
+import JSON (localizeValue)
+import Localize (localize)
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "localize"
+tests = testGroup "tests" [localizeTests, localizeValueTests]
+
+localizeTests :: TestTree
+localizeTests = testGroup "localize"
     [ testCase "returns empty string for empty input" $
             localize "" @?= ""
 
@@ -40,3 +49,43 @@ tests = testGroup "localize"
     , testCase "keeps the order of groups separated by pipe" $
             localize "Hello ONE world? $foo|Hello %count% worlds!|other" @?= "$foo ?DLROW eno OLLEh|!SDLROW %count% OLLEh|REHTO"
     ]
+
+localizeValueTests :: TestTree
+localizeValueTests = testGroup "localizeValue"
+    [ testCase "returns empty value for empty value" $
+            localizeValue (forceDecode "{}") @?= forceDecode "{}"
+
+    , testCase "localizes all string values" $
+            localizeValue (forceDecode [r|
+                { "foo": "Foo", "bar": "BAR",
+                  "array": [ "Hello", "World!" ],
+                  "nested": { "object": { "here": "Object" } }
+                }
+            |]) @?= forceDecode [r|
+                { "foo": "OOf", "bar": "rab",
+                  "array": [ "OLLEh", "!DLROw" ],
+                  "nested": { "object": { "here": "TCEJBo" } }
+                }
+            |]
+
+    , testCase "localizes raw string" $
+            localizeValue (forceDecode [r|"foo BAR"|]) @?= forceDecode [r|"rab OOF"|]
+
+    , testCase "preserves non-string types" $
+            localizeValue (forceDecode [r|
+                { "foo": 3.1415,
+                  "bar": "bar",
+                  "array": [ "HELLO", true ],
+                  "nested": { "object": { "here": null }, "string": "str" }
+                }
+            |]) @?= forceDecode [r|
+                { "foo": 3.1415,
+                  "bar": "RAB",
+                  "array": [ "olleh", true ],
+                  "nested": { "object": { "here": null }, "string": "RTS" }
+                }
+            |]
+    ]
+
+forceDecode :: BL.ByteString -> Value
+forceDecode = fromJust . decode

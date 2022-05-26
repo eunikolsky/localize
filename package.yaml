@@ -20,7 +20,9 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/eunikolsky/localize#readme>
 
 dependencies:
+- aeson
 - base >= 4.7 && < 5
+- bytestring
 - text
 
 library:
@@ -52,5 +54,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - localize
+    - raw-strings-qq
     - tasty
     - tasty-hunit

@@ -3,10 +3,14 @@ module Daemon
     ) where
 
 import Control.Monad (unless)
+import Data.Aeson
 import System.Directory (canonicalizePath)
 import System.FilePath (takeDirectory)
 import System.FSNotify
-import System.IO (isEOF)
+import System.IO (hPutStrLn, isEOF, stderr)
+import qualified Data.ByteString.Lazy.Char8 as C (putStrLn)
+
+import JSON (localizeValue)
 
 -- | Starts a daemon that monitors for changes in the given json @file@
 -- and localizes all the strings in the file on every change.
@@ -15,7 +19,8 @@ startDaemon file = withManager $ \mgr -> do
     canonicalPath <- canonicalizePath file
     -- @watchTree@ works only on directories, so we need to get the @file@'s parent
     let parentDir = takeDirectory canonicalPath
-    watchTree mgr parentDir (isTargetFile canonicalPath) print
+    -- FIXME check for event type
+    watchTree mgr parentDir (isTargetFile canonicalPath) (localizeJSON . eventPath)
 
     waitForEOF
 
@@ -30,3 +35,11 @@ waitForEOF = do
     -- based on https://stackoverflow.com/a/10195290
     finished <- isEOF
     unless finished $ getLine >> waitForEOF
+
+-- | Localizes all string values in the given @json@ file.
+localizeJSON :: FilePath -> IO ()
+localizeJSON file = do
+    eitherValue <- eitherDecodeFileStrict' file
+    case eitherValue of
+        Right value -> C.putStrLn . encode $ localizeValue value
+        Left err -> hPutStrLn stderr err
