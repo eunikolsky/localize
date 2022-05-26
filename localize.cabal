@@ -39,6 +39,7 @@ library
 executable localize
   main-is: Main.hs
   other-modules:
+      Daemon
       Paths_localize
   hs-source-dirs:
       app
