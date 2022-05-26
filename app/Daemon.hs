@@ -15,7 +15,7 @@ import JSON (localizeValue)
 -- | Starts a daemon that monitors for changes in the given json @file@
 -- and localizes all the strings in the file on every change.
 startDaemon :: FilePath -> IO ()
-startDaemon file = withManager $ \mgr -> do
+startDaemon file = withManagerConf config $ \mgr -> do
     canonicalPath <- canonicalizePath file
     -- @watchTree@ works only on directories, so we need to get the @file@'s parent
     let parentDir = takeDirectory canonicalPath
@@ -28,6 +28,11 @@ startDaemon file = withManager $ \mgr -> do
         -- we're interested only in @file@ whereas @watchTree@ produces events for
         -- the entire directory
         isTargetFile path ev = eventPath ev == path
+
+        -- increase the debounce interval to 100 ms to filter out quick changes
+        -- (caused sometimes by vs code for some reason)
+        -- TODO check out the warning at https://www.stackage.org/haddock/lts-19.8/fsnotify-0.3.0.1/System-FSNotify.html#t:Debounce
+        config = defaultConfig { confDebounce = Debounce 0.1 }
 
 -- | Waits until the user hits @Ctlr+d@ (which is @stdin@'s EOF).
 waitForEOF :: IO ()
