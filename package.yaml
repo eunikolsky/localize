@@ -38,6 +38,9 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - localize
+    - directory
+    - filepath
+    - fsnotify
 
 tests:
   localize-test:
