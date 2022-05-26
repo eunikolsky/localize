@@ -15,14 +15,18 @@ import JSON (localizeValue)
 -- | Starts a daemon that monitors for changes in the given json @file@
 -- and localizes all the strings in the file on every change.
 startDaemon :: FilePath -> IO ()
-startDaemon file = withManagerConf config $ \mgr -> do
-    canonicalPath <- canonicalizePath file
-    -- @watchTree@ works only on directories, so we need to get the @file@'s parent
-    let parentDir = takeDirectory canonicalPath
-    -- FIXME check for event type
-    watchTree mgr parentDir (isTargetFile canonicalPath) (localizeJSON . eventPath)
+startDaemon file = do
+    -- localize the file at startup to make sure we're up-to-date
+    localizeJSON file
 
-    waitForEOF
+    withManagerConf config $ \mgr -> do
+        canonicalPath <- canonicalizePath file
+        -- @watchTree@ works only on directories, so we need to get the @file@'s parent
+        let parentDir = takeDirectory canonicalPath
+        -- FIXME check for event type
+        watchTree mgr parentDir (isTargetFile canonicalPath) (localizeJSON . eventPath)
+
+        waitForEOF
 
     where
         -- we're interested only in @file@ whereas @watchTree@ produces events for
