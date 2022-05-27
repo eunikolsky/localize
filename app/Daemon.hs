@@ -7,6 +7,7 @@ import Data.Aeson
 import System.Directory (canonicalizePath)
 import System.FilePath (takeDirectory)
 import System.FSNotify
+import System.FSNotify.Devel
 import System.IO (hPutStrLn, isEOF, stderr)
 import qualified Data.ByteString.Lazy.Char8 as C (putStrLn)
 
@@ -23,15 +24,14 @@ startDaemon file = do
         canonicalPath <- canonicalizePath file
         -- @watchTree@ works only on directories, so we need to get the @file@'s parent
         let parentDir = takeDirectory canonicalPath
-        -- FIXME check for event type
-        watchTree mgr parentDir (isTargetFile canonicalPath) (localizeJSON . eventPath)
+        watchTree mgr parentDir (existsEvents $ isTargetFile canonicalPath) (doAllEvents localizeJSON)
 
         waitForEOF
 
     where
         -- we're interested only in @file@ whereas @watchTree@ produces events for
         -- the entire directory
-        isTargetFile path ev = eventPath ev == path
+        isTargetFile = (==)
 
         -- increase the debounce interval to 100 ms to filter out quick changes
         -- (caused sometimes by vs code for some reason)
