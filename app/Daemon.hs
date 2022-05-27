@@ -13,10 +13,11 @@ import Data.String (IsString)
 import GHC.Generics
 import System.Directory (doesFileExist, listDirectory, createDirectoryIfMissing)
 import System.Exit (die)
-import System.FilePath ((</>), replaceDirectory, takeDirectory, takeExtension)
 import System.FSNotify
 import System.FSNotify.Devel
+import System.FilePath ((</>), replaceDirectory, takeDirectory, takeExtension)
 import System.IO (hPutStrLn, isEOF, stderr)
+import qualified Data.Aeson.Encode.Pretty as AP
 import qualified Data.ByteString.Lazy.Char8 as C (ByteString, writeFile)
 import qualified Data.Map.Strict as M
 
@@ -84,7 +85,7 @@ localizeJSON :: String -> FilePath -> IO ()
 localizeJSON outputDir file = do
   eitherValue <- eitherDecodeFileStrict' file
   case eitherValue of
-    Right value -> writeFile' (replaceDirectory file outputDir) . encode $ localizeValue value
+    Right value -> writeFile' (replaceDirectory file outputDir) . jq $ localizeValue value
     Left err -> hPutStrLn stderr err
 
 -- | Writes @ByteString@ to @file@ ensuring that its directory exists.
@@ -92,3 +93,15 @@ writeFile' :: FilePath -> C.ByteString -> IO ()
 writeFile' file bs = do
   createDirectoryIfMissing True $ takeDirectory file
   C.writeFile file bs
+
+-- | Pretty-prints JSON @Value@ as @jq@ does.
+jq :: Value -> C.ByteString
+jq = AP.encodePretty' jqConfig
+  where
+    jqConfig :: AP.Config
+    jqConfig = AP.Config
+      { AP.confIndent = AP.Spaces 2
+      , AP.confCompare = compare
+      , AP.confNumFormat = AP.Generic
+      , AP.confTrailingNewline = True
+      }
