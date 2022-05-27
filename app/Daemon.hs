@@ -6,7 +6,8 @@ module Daemon
   , startDaemon
   ) where
 
-import Control.Monad (forM_, unless)
+import Control.Concurrent (threadDelay)
+import Control.Monad (forM_, forever, unless)
 import Data.Aeson
 import Data.Map.Strict (Map)
 import Data.String (IsString)
@@ -16,7 +17,7 @@ import System.Exit (die)
 import System.FSNotify
 import System.FSNotify.Devel
 import System.FilePath ((</>), replaceDirectory, takeExtension)
-import System.IO (hPutStrLn, isEOF, stderr)
+import System.IO (hPutStrLn, stderr)
 import qualified Data.Aeson.Encode.Pretty as AP
 import qualified Data.ByteString.Lazy.Char8 as C (ByteString, writeFile)
 import qualified Data.Map.Strict as M
@@ -57,7 +58,7 @@ startDaemon (Config { watchDirs = dirs }) = do
     forM_ (M.toList dirs) $
       \(dir, outputDir) -> treeExtExists mgr dir jsonExt (localizeJSON outputDir)
 
-    waitForEOF
+    blockForever
 
   where
     jsonExt :: IsString s => s
@@ -75,12 +76,9 @@ startDaemon (Config { watchDirs = dirs }) = do
       let jsons = fmap (dir </>) . filter ((== jsonExt) . takeExtension) $ files
       mapM_ (localizeJSON outputDir) jsons
 
--- | Waits until the user hits @Ctlr+d@ (which is @stdin@'s EOF).
-waitForEOF :: IO ()
-waitForEOF = do
-  -- based on https://stackoverflow.com/a/10195290
-  finished <- isEOF
-  unless finished $ getLine >> waitForEOF
+-- | Waits until the user hits @Ctrl+c@.
+blockForever :: IO ()
+blockForever = forever . threadDelay $ 1000000 * 86400
 
 -- | Localizes all string values in the given json @file@ and writes the result to a file with
 -- the same name in @outputDir@.
