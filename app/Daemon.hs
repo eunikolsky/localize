@@ -7,7 +7,8 @@ module Daemon
   ) where
 
 import Control.Concurrent (threadDelay)
-import Control.Monad (forM_, forever, unless)
+import Control.DeepSeq (deepseq)
+import Control.Monad (forM_, forever, unless, when)
 import Data.Aeson
 import Data.Map.Strict (Map)
 import Data.String (IsString)
@@ -19,7 +20,7 @@ import System.FSNotify.Devel
 import System.FilePath ((</>), replaceDirectory, takeExtension)
 import System.IO (hPutStrLn, stderr)
 import qualified Data.Aeson.Encode.Pretty as AP
-import qualified Data.ByteString.Lazy.Char8 as C (ByteString, writeFile)
+import qualified Data.ByteString.Lazy.Char8 as C (ByteString, readFile, writeFile)
 import qualified Data.Map.Strict as M
 
 import JSON (localizeValue)
@@ -86,8 +87,17 @@ localizeJSON :: String -> FilePath -> IO ()
 localizeJSON outputDir file = do
   eitherValue <- eitherDecodeFileStrict' file
   case eitherValue of
-    Right value -> C.writeFile (replaceDirectory file outputDir) . jq $ localizeValue value
+    Right value -> writeFileIfChanged (replaceDirectory file outputDir) . jq $ localizeValue value
     Left err -> hPutStrLn stderr err
+
+-- | Writes @bs@ to the @file@ only if current contents are different.
+writeFileIfChanged :: FilePath -> C.ByteString -> IO ()
+writeFileIfChanged file bs = do
+  exists <- doesFileExist file
+  contentsChanged <- if exists
+    then (\old -> old `deepseq` old /= bs) <$> C.readFile file
+    else pure True
+  when contentsChanged $ C.writeFile file bs
 
 -- | Pretty-prints JSON @Value@ as @jq@ does.
 jq :: Value -> C.ByteString

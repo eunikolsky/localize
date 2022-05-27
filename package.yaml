@@ -42,6 +42,7 @@ executables:
     - localize
     - aeson-pretty
     - containers
+    - deepseq
     - directory
     - filepath
     - fsnotify
