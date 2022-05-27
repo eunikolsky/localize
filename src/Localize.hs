@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Localize
-    ( localize
-    ) where
+  ( localize
+  ) where
 
 import Prelude hiding (concat)
 
@@ -20,8 +20,8 @@ type Parser = Parsec Void Text
 
 -- | Represents an individual part of the incoming string.
 data Token
-    = TokChar Char    -- ^ A char that will be flipped and reversed.
-    | TokString Text  -- ^ An immutable string that will be kept as is.
+  = TokChar Char    -- ^ A char that will be flipped and reversed.
+  | TokString Text  -- ^ An immutable string that will be kept as is.
 
 -- | A list of tokens located between @tokenGroupSeparator@s.
 newtype TokenGroup = TokenGroup { unTokenGroup :: [Token] }
@@ -36,59 +36,59 @@ tokenGroupSeparator = '|'
 -- (`{{foo_BAR}}`) are preserved as is.
 localize :: Text -> Text
 localize = intercalate (singleton tokenGroupSeparator) . fmap processGroup . parseString
-    where
-        processGroup :: TokenGroup -> Text
-        processGroup = concat . fmap flipCase . reverse . unTokenGroup
+  where
+    processGroup :: TokenGroup -> Text
+    processGroup = concat . fmap flipCase . reverse . unTokenGroup
 
 -- | Parses the input string into a list of token groups.
 parseString :: Text -> [TokenGroup]
 parseString s = parseMaybe (tokenGroup `sepBy` char tokenGroupSeparator) s
-    -- I don't expect this parser to fail on any input, but if it does,
-    -- leave the input as is.
-    & or [TokenGroup [TokString s]]
-    where
-        tokenGroup :: Parser TokenGroup
-        tokenGroup = TokenGroup <$> many token
+  -- I don't expect this parser to fail on any input, but if it does,
+  -- leave the input as is.
+  & or [TokenGroup [TokString s]]
+  where
+    tokenGroup :: Parser TokenGroup
+    tokenGroup = TokenGroup <$> many token
 
-        token :: Parser Token
-        token
-            = TokString <$> try (choice
-                [ jsonEscapedChar
-                , phpStylePlaceholder
-                , reactStylePlaceholder
-                , countPHPPlaceholder
-                ])
-            <|> TokChar <$> anySingleBut tokenGroupSeparator
+    token :: Parser Token
+    token
+      = TokString <$> try (choice
+        [ jsonEscapedChar
+        , phpStylePlaceholder
+        , reactStylePlaceholder
+        , countPHPPlaceholder
+        ])
+      <|> TokChar <$> anySingleBut tokenGroupSeparator
 
-        or = fromMaybe
+    or = fromMaybe
 
 -- | Flips the case of the given token.
 flipCase :: Token -> Text
 flipCase (TokChar c) = singleton $ flip c
-    where flip c = (if isLower c then toUpper else toLower) c
+  where flip c = (if isLower c then toUpper else toLower) c
 flipCase (TokString s) = s
 
 -- | Parses a subset of the allowed escaped characters in JSON.
 jsonEscapedChar :: Parser Text
 jsonEscapedChar = do
-    backslash <- single '\\'
-    cont <- oneOf ['t', 'r', 'n', 'b', '"']
-    pure . pack $ backslash : [cont]
+  backslash <- single '\\'
+  cont <- oneOf ['t', 'r', 'n', 'b', '"']
+  pure . pack $ backslash : [cont]
 
 -- | Parses a PHP-style placeholder, which looks like `$foo` where the
 -- allowed characters after `$` are big/small letters and underscore.
 phpStylePlaceholder :: Parser Text
 phpStylePlaceholder = do
-    start <- single '$'
-    id <- some $ letterChar <|> single '_'
-    pure . pack $ start : id
+  start <- single '$'
+  id <- some $ letterChar <|> single '_'
+  pure . pack $ start : id
 
 -- | Parses a React-style placeholder, which looks like `{{foo}}`.
 reactStylePlaceholder :: Parser Text
 reactStylePlaceholder = do
-    start <- string "{{"
-    (id, end) <- someTill_ anySingle (string "}}")
-    pure $ mconcat [start, pack id, end]
+  start <- string "{{"
+  (id, end) <- someTill_ anySingle (string "}}")
+  pure $ mconcat [start, pack id, end]
 
 -- | Parses the @%count%@ PHP placeholder for pluralization support.
 countPHPPlaceholder :: Parser Text

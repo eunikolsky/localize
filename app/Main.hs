@@ -10,9 +10,9 @@ import Localize (localize)
 
 main :: IO ()
 main = do
-    args <- getArgs
-    case args of
-        [] -> TIO.interact localize
-        ["-d", dir] -> startDaemon dir
-        ["--version"] -> putStrLn $ showVersion version
-        _ -> error "Unrecognized arguments"
+  args <- getArgs
+  case args of
+    [] -> TIO.interact localize
+    ["-d", dir] -> startDaemon dir
+    ["--version"] -> putStrLn $ showVersion version
+    _ -> error "Unrecognized arguments"

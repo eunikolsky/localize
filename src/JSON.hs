@@ -1,6 +1,6 @@
 module JSON
-    ( localizeValue
-    ) where
+  ( localizeValue
+  ) where
 
 import Data.Aeson (Value(..))
 import Data.Text (Text)
