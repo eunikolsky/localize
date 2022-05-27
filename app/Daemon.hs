@@ -15,7 +15,7 @@ import System.Directory (doesFileExist, listDirectory, createDirectoryIfMissing)
 import System.Exit (die)
 import System.FSNotify
 import System.FSNotify.Devel
-import System.FilePath ((</>), replaceDirectory, takeDirectory, takeExtension)
+import System.FilePath ((</>), replaceDirectory, takeExtension)
 import System.IO (hPutStrLn, isEOF, stderr)
 import qualified Data.Aeson.Encode.Pretty as AP
 import qualified Data.ByteString.Lazy.Char8 as C (ByteString, writeFile)
@@ -47,6 +47,7 @@ parseConfig file = do
 -- corresponding @watchDirs@ (values).
 startDaemon :: Config -> IO ()
 startDaemon (Config { watchDirs = dirs }) = do
+  ensureOutputDirectories
   -- localize the files in the directory at startup to make sure we're up-to-date
   localizeAll
 
@@ -67,6 +68,8 @@ startDaemon (Config { watchDirs = dirs }) = do
     -- TODO check out the warning at https://www.stackage.org/haddock/lts-19.8/fsnotify-0.3.0.1/System-FSNotify.html#t:Debounce
     config = defaultConfig { confDebounce = Debounce 0.1 }
 
+    ensureOutputDirectories = forM_ (M.keys dirs) $ createDirectoryIfMissing True
+
     localizeAll = forM_ (M.toList dirs) $ \(dir, outputDir) -> do
       files <- listDirectory dir
       let jsons = fmap (dir </>) . filter ((== jsonExt) . takeExtension) $ files
@@ -85,14 +88,8 @@ localizeJSON :: String -> FilePath -> IO ()
 localizeJSON outputDir file = do
   eitherValue <- eitherDecodeFileStrict' file
   case eitherValue of
-    Right value -> writeFile' (replaceDirectory file outputDir) . jq $ localizeValue value
+    Right value -> C.writeFile (replaceDirectory file outputDir) . jq $ localizeValue value
     Left err -> hPutStrLn stderr err
-
--- | Writes @ByteString@ to @file@ ensuring that its directory exists.
-writeFile' :: FilePath -> C.ByteString -> IO ()
-writeFile' file bs = do
-  createDirectoryIfMissing True $ takeDirectory file
-  C.writeFile file bs
 
 -- | Pretty-prints JSON @Value@ as @jq@ does.
 jq :: Value -> C.ByteString
