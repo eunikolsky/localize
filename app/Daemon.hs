@@ -4,7 +4,7 @@ module Daemon
   ( startDaemon
   ) where
 
-import Control.Monad (unless)
+import Control.Monad (forM_, unless)
 import Data.Aeson
 import Data.String (IsString)
 import System.Directory (listDirectory)
@@ -16,15 +16,17 @@ import qualified Data.ByteString.Lazy.Char8 as C (putStrLn)
 
 import JSON (localizeValue)
 
--- | Starts a daemon that monitors for changes in all json files in the given @dir@
+-- | Starts a daemon that monitors for changes in all json files in the given @dirs@
 -- and localizes all the strings in the files on every change.
-startDaemon :: FilePath -> IO ()
-startDaemon dir = do
+startDaemon :: [FilePath] -> IO ()
+startDaemon dirs = do
   -- localize the files in the directory at startup to make sure we're up-to-date
   localizeAll
 
+  -- FIXME this produces duplicate events for files in a subdirectory when both it and its parent
+  -- directory are being watched.
   withManagerConf config $ \mgr -> do
-    treeExtExists mgr dir jsonExt localizeJSON
+    forM_ dirs $ \dir -> treeExtExists mgr dir jsonExt localizeJSON
 
     waitForEOF
 
@@ -37,7 +39,7 @@ startDaemon dir = do
     -- TODO check out the warning at https://www.stackage.org/haddock/lts-19.8/fsnotify-0.3.0.1/System-FSNotify.html#t:Debounce
     config = defaultConfig { confDebounce = Debounce 0.1 }
 
-    localizeAll = do
+    localizeAll = forM_ dirs $ \dir -> do
       files <- listDirectory dir
       let jsons = fmap (dir </>) . filter ((== jsonExt) . takeExtension) $ files
       mapM_ localizeJSON jsons
