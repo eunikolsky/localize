@@ -13,6 +13,6 @@ main = do
     args <- getArgs
     case args of
         [] -> TIO.interact localize
-        ["-d", file] -> startDaemon file
+        ["-d", dir] -> startDaemon dir
         ["--version"] -> putStrLn $ showVersion version
         _ -> error "Unrecognized arguments"
