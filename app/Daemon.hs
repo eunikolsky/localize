@@ -1,13 +1,17 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Daemon
-  ( startDaemon
+  ( parseConfig
+  , startDaemon
   ) where
 
 import Control.Monad (forM_, unless)
 import Data.Aeson
 import Data.String (IsString)
-import System.Directory (listDirectory)
+import GHC.Generics
+import System.Directory (doesFileExist, listDirectory)
+import System.Exit (die)
 import System.FilePath ((</>), takeExtension)
 import System.FSNotify
 import System.FSNotify.Devel
@@ -16,10 +20,29 @@ import qualified Data.ByteString.Lazy.Char8 as C (putStrLn)
 
 import JSON (localizeValue)
 
--- | Starts a daemon that monitors for changes in all json files in the given @dirs@
+-- | Daemon's config.
+newtype Config = Config
+  { watchDirs :: [FilePath] -- ^ Directories to watch.
+  }
+  deriving Generic
+
+instance FromJSON Config
+
+-- | Parses @Config@ from @file@. Stops the program on errors.
+parseConfig :: FilePath -> IO Config
+parseConfig file = do
+  exists <- doesFileExist file
+  unless exists . die $ "Can't find config file: " ++ file
+
+  eitherConfig <- eitherDecodeFileStrict' file
+  case eitherConfig of
+    Right config -> pure config
+    Left err -> die $ "Error parsing config file: " ++ err
+
+-- | Starts a daemon that monitors for changes in all json files in the given @watchDirs@
 -- and localizes all the strings in the files on every change.
-startDaemon :: [FilePath] -> IO ()
-startDaemon dirs = do
+startDaemon :: Config -> IO ()
+startDaemon (Config { watchDirs = dirs }) = do
   -- localize the files in the directory at startup to make sure we're up-to-date
   localizeAll
 
