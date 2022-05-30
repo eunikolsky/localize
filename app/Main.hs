@@ -8,11 +8,26 @@ import Paths_localize (version)
 import Daemon (parseConfig, startDaemon)
 import Localize (localize)
 
+type ConfigFilePath = FilePath
+
+-- | Possible actions for the program, controlled by command line arguments.
+data Action
+  = LocalizeInput
+  | StartDaemon ConfigFilePath
+  | PrintVersion
+
+run :: Action -> IO ()
+run LocalizeInput = TIO.interact localize
+run (StartDaemon configFile) = parseConfig configFile >>= startDaemon
+run PrintVersion = putStrLn $ showVersion version
+
 main :: IO ()
 main = do
   args <- getArgs
-  case args of
-    [] -> TIO.interact localize
-    ["-d", configFile] -> parseConfig configFile >>= startDaemon
-    ["--version"] -> putStrLn $ showVersion version
+  let { action = case args of
+    [] -> LocalizeInput
+    ["-d", configFile] -> StartDaemon configFile
+    ["--version"] -> PrintVersion
     _ -> error "Unrecognized arguments"
+  }
+  run action
