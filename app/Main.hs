@@ -2,11 +2,12 @@ module Main where
 
 import Data.Text.IO as TIO (interact)
 import Data.Version (showVersion)
-import System.Environment (getArgs)
+import Options.Applicative hiding (action)
 
 import Paths_localize (version)
 import Daemon (parseConfig, startDaemon)
 import Localize (localize)
+import Options.Applicative.Types (optShowDefault)
 
 type ConfigFilePath = FilePath
 
@@ -16,18 +17,21 @@ data Action
   | StartDaemon ConfigFilePath
   | PrintVersion
 
+action :: Parser Action
+action = startDaemon <|> printVersion <|> localizeInput
+  where
+    startDaemon = StartDaemon <$> strOption (short 'd' <> metavar "CONFIG_FILE" <> help "Start the daemon watching files")
+    printVersion = PrintVersion <$ flag' () (long "version" <> help "Print version")
+    localizeInput = pure LocalizeInput
+
 run :: Action -> IO ()
 run LocalizeInput = TIO.interact localize
 run (StartDaemon configFile) = parseConfig configFile >>= startDaemon
 run PrintVersion = putStrLn $ showVersion version
 
 main :: IO ()
-main = do
-  args <- getArgs
-  let { action = case args of
-    [] -> LocalizeInput
-    ["-d", configFile] -> StartDaemon configFile
-    ["--version"] -> PrintVersion
-    _ -> error "Unrecognized arguments"
-  }
-  run action
+main = run =<< execParser opts
+  where
+    opts = info (action <**> helper)
+      ( fullDesc
+     <> header "Fake localization helper tool" )

@@ -46,6 +46,7 @@ executables:
     - directory
     - filepath
     - fsnotify
+    - optparse-applicative
 
 tests:
   localize-test:
