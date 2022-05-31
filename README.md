@@ -58,10 +58,24 @@ $ echo -n 'ёHello\\nworld \\r\\"$xyz\\" ёё {{foo_BAR}} ❓🚜 й ❄' | loca
 A sample `vim` macro `s` to localize a json string (within quotes `"`):
 
 ```vim
-let @s='vi""0y:let @0=system("localize", @0)vi""0pn'
+let @s='vi""0y:let @0=system("localize", @0)
+vi""0pn'
 ```
 
 To use it, place the curson inside a string within `"` and press `@s`.
+
+## Known issues
+
+* Unicode grapheme clusters aren't processed correctly; the constituent codepoints are reversed instead of staying as a single cluster:
+
+    ```bash
+    $ echo -n '❄️  á' | localize
+    A  ️❄
+    $ echo -n '❄️  á' | xxd
+    00000000: e29d 84ef b88f 2020 61cc 81              ......  a..
+    $ echo -n '❄️  á' | localize | xxd
+    00000000: cc81 4120 20ef b88f e29d 84              ..A  ......
+    ```
 
 ## Technical details
 
