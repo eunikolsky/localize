@@ -28,6 +28,12 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+  - aeson-pretty
+  - containers
+  - deepseq
+  - directory
+  - filepath
+  - fsnotify
   - megaparsec
 
 executables:
@@ -40,12 +46,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - localize
-    - aeson-pretty
-    - containers
-    - deepseq
-    - directory
-    - filepath
-    - fsnotify
     - optparse-applicative
 
 tests:
@@ -58,6 +58,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - localize
+    - directory
     - raw-strings-qq
     - tasty
     - tasty-hunit

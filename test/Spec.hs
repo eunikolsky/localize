@@ -10,12 +10,13 @@ import qualified Data.ByteString.Lazy as BL
 
 import JSON (localizeValue)
 import Localize (localize)
+import DaemonSpec (daemonTests)
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "tests" [localizeTests, localizeValueTests]
+tests = testGroup "tests" [localizeTests, localizeValueTests, daemonTests]
 
 localizeTests :: TestTree
 localizeTests = testGroup "localize"

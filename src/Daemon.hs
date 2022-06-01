@@ -2,7 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Daemon
-  ( parseConfig
+  ( Config
+  , parseConfig
   , startDaemon
   ) where
 
@@ -70,7 +71,7 @@ startDaemon (Config { watchDirs = dirs }) = do
     -- TODO check out the warning at https://www.stackage.org/haddock/lts-19.8/fsnotify-0.3.0.1/System-FSNotify.html#t:Debounce
     config = defaultConfig { confDebounce = Debounce 0.1 }
 
-    ensureOutputDirectories = forM_ (M.keys dirs) $ createDirectoryIfMissing True
+    ensureOutputDirectories = forM_ (M.elems dirs) $ createDirectoryIfMissing True
 
     localizeAll = forM_ (M.toList dirs) $ \(dir, outputDir) -> do
       files <- listDirectory dir
