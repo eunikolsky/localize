@@ -62,4 +62,5 @@ tests:
     - raw-strings-qq
     - stm
     - tasty
+    - tasty-expected-failure
     - tasty-hunit

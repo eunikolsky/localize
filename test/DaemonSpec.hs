@@ -7,6 +7,7 @@ import Control.Concurrent.STM.TVar
 import Control.Monad
 import Control.Monad.STM
 import Test.Tasty
+import Test.Tasty.ExpectedFailure
 import Test.Tasty.HUnit
 import Text.RawString.QQ (r)
 import System.Directory
@@ -41,7 +42,7 @@ daemonTests = testGroup "startDaemon"
     -- ^ this creates a dependency on the first test so that they don't run concurrently,
     -- which fails because current directory is a shared resource
     -- TODO refactor to remove 'withCurrentDirectory'
-      testCase "calls localize function only once on a file change" $ do
+      testCase "calls localize function only once on a file change (1)" $ do
         cleanDirectory testDirectory
         withCurrentDirectory testDirectory $ do
           createDirectory "dir"
@@ -55,6 +56,8 @@ daemonTests = testGroup "startDaemon"
           callCountVar <- newTVarIO 0
           thread <- forkIO $ startDaemon (fakeLocalizeJSON callCountVar) config
 
+          -- note: this initial delay is needed to skip the initial localization
+          threadDelay 1000
           writeFile "dir/1.json" "{}"
           -- 300 ms to wait for any watched localize calls in response to the file change
           -- it's bigger than the debounce period of 100 ms in 'startDaemon'
@@ -64,6 +67,38 @@ daemonTests = testGroup "startDaemon"
           callCount @?= 1
 
           killThread thread
+
+  , after AllFinish "1" $
+      -- ^ mutually exclusive execution of all tests here; very dirty
+      expectFailBecause "there is a bug duplicate events from a nested dir" $
+      testGroup "when nested directories are watched"
+        [ testCase "calls localize function only once on a file change" $ do
+            cleanDirectory testDirectory
+            withCurrentDirectory testDirectory $ do
+              mapM_ createDirectory ["dir", "dir/nested"]
+              let configText = [r|
+                {"watchDirs": {
+                  "dir": "out",
+                  "dir/nested": "out/nested"
+                }}
+              |]
+              config <- readConfig configText
+
+              callCountVar <- newTVarIO 0
+              thread <- forkIO $ startDaemon (fakeLocalizeJSON callCountVar) config
+
+              -- note: this initial delay is needed to skip the initial localization
+              threadDelay 1000
+              writeFile "dir/nested/1.json" "[]"
+              -- 300 ms to wait for any watched localize calls in response to the file change
+              -- it's bigger than the debounce period of 100 ms in 'startDaemon'
+              threadDelay 300000
+
+              callCount <- readTVarIO callCountVar
+              callCount @?= 1
+
+              killThread thread
+        ]
   ]
 
 -- | Counts the calls to the 'localizeJSON' function.

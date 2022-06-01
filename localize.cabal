@@ -80,6 +80,7 @@ test-suite localize-test
     , raw-strings-qq
     , stm
     , tasty
+    , tasty-expected-failure
     , tasty-hunit
     , text
   default-language: Haskell2010
