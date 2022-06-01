@@ -60,5 +60,6 @@ tests:
     - localize
     - directory
     - raw-strings-qq
+    - stm
     - tasty
     - tasty-hunit

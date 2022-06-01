@@ -3,6 +3,9 @@
 
 module Daemon
   ( Config
+  , LocalizeJSON
+
+  , localizeJSON
   , parseConfig
   , startDaemon
   ) where
@@ -45,11 +48,14 @@ parseConfig file = do
     Right config -> pure config
     Left err -> die $ "Error parsing config file: " ++ err
 
+type LocalizeJSON = String -> FilePath -> IO ()
+
 -- | Starts a daemon that monitors for changes in all json files in the given @watchDirs@ (keys),
 -- localizes all the strings in the files on every change, and writes the result to the
--- corresponding @watchDirs@ (values).
-startDaemon :: Config -> IO ()
-startDaemon (Config { watchDirs = dirs }) = do
+-- corresponding @watchDirs@ (values). The @localize@ function is the handler when a file is
+-- changed; it's a parameter for mocking in tests.
+startDaemon :: LocalizeJSON -> Config -> IO ()
+startDaemon localize (Config { watchDirs = dirs }) = do
   ensureOutputDirectories
   -- localize the files in the directory at startup to make sure we're up-to-date
   localizeAll
@@ -58,7 +64,7 @@ startDaemon (Config { watchDirs = dirs }) = do
   -- directory are being watched.
   withManagerConf config $ \mgr -> do
     forM_ (M.toList dirs) $
-      \(dir, outputDir) -> treeExtExists mgr dir jsonExt (localizeJSON outputDir)
+      \(dir, outputDir) -> treeExtExists mgr dir jsonExt (localize outputDir)
 
     blockForever
 
@@ -76,7 +82,7 @@ startDaemon (Config { watchDirs = dirs }) = do
     localizeAll = forM_ (M.toList dirs) $ \(dir, outputDir) -> do
       files <- listDirectory dir
       let jsons = fmap (dir </>) . filter ((== jsonExt) . takeExtension) $ files
-      mapM_ (localizeJSON outputDir) jsons
+      mapM_ (localize outputDir) jsons
 
 -- | Waits until the user hits @Ctrl+c@.
 blockForever :: IO ()
@@ -84,7 +90,7 @@ blockForever = forever . threadDelay $ 1000000 * 86400
 
 -- | Localizes all string values in the given json @file@ and writes the result to a file with
 -- the same name in @outputDir@.
-localizeJSON :: String -> FilePath -> IO ()
+localizeJSON :: LocalizeJSON
 localizeJSON outputDir file = do
   eitherValue <- eitherDecodeFileStrict' file
   case eitherValue of

@@ -6,7 +6,7 @@ import Data.Version (showVersion)
 import Options.Applicative hiding (action)
 
 import Paths_localize (version)
-import Daemon (parseConfig, startDaemon)
+import Daemon (localizeJSON, parseConfig, startDaemon)
 import Localize (localize)
 import Options.Applicative.Types (optShowDefault)
 
@@ -27,7 +27,7 @@ action = asum [startDaemon, printVersion, localizeInput]
 
 run :: Action -> IO ()
 run LocalizeInput = TIO.interact localize
-run (StartDaemon configFile) = parseConfig configFile >>= startDaemon
+run (StartDaemon configFile) = parseConfig configFile >>= startDaemon localizeJSON
 run PrintVersion = putStrLn $ showVersion version
 
 main :: IO ()
