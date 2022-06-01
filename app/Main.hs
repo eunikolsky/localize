@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Foldable (asum)
 import Data.Text.IO as TIO (interact)
 import Data.Version (showVersion)
 import Options.Applicative hiding (action)
@@ -18,7 +19,7 @@ data Action
   | PrintVersion
 
 action :: Parser Action
-action = startDaemon <|> printVersion <|> localizeInput
+action = asum [startDaemon, printVersion, localizeInput]
   where
     startDaemon = StartDaemon <$> strOption (short 'd' <> metavar "CONFIG_FILE" <> help "Start the daemon watching files")
     printVersion = PrintVersion <$ flag' () (long "version" <> help "Print version")
