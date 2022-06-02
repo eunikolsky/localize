@@ -1,2 +1,4 @@
 .stack-work/
 *~
+config.json
+/test/daemonspec
