@@ -1,5 +1,6 @@
 {
   "watchDirs": {
-    "lang/en": "lang/fake"
+    "lang/en": "lang/fake",
+    "src/locales/en": "src/locales/fake"
   }
 }

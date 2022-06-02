@@ -64,6 +64,34 @@ vi""0pn'
 
 To use it, place the curson inside a string within `"` and press `@s`.
 
+### Daemon mode
+
+`localize` has a daemon mode when it watches for changes in JSON files in the given directories, automatically localizes all string values and writes the output JSON file into a corresponding directory. All the found JSON files in those directories are also localized at startup. The output JSON files are pretty-printed and object keys are sorted — the same style as when piping through [`jq --sort-keys .`](https://stedolan.github.io/jq/manual/).
+
+The directories to watch are specified with a config file; you can use [`config.json.sample`](config.json.sample) as a sample config:
+
+```json
+{
+  "watchDirs": {
+    "lang/en": "lang/fake",
+    "src/locales/en": "src/locales/fake"
+  }
+}
+```
+
+Here the `lang/en` and `src/locales/en` directories are watched (non-recursively) and a localized JSON file from from `lang/en/` is saved into `lang/fake/` with the original name, the same for `src/locales/en/` => `src/locales/fake/`. Note that relative paths are resolved relative to the current directory.
+
+To start this mode, use the `-d` option:
+
+```bash
+$ localize -d config.json
+
+# or run in the background:
+$ localize -d config.json &
+```
+
+True to the [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy) ("Don't clutter output with extraneous information"), the program doesn't print anything to `stdout` when everything goes smoothly. If there is any error (for example, a failure to parse a json file), then it's printed to `stderr`.
+
 ## Known issues
 
 * Unicode grapheme clusters aren't processed correctly; the constituent codepoints are reversed instead of staying as a single cluster:
