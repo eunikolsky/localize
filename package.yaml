@@ -59,6 +59,7 @@ tests:
     dependencies:
     - localize
     - directory
+    - filepath
     - raw-strings-qq
     - stm
     - tasty
