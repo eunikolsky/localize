@@ -7,7 +7,6 @@ import Control.Monad.STM
 import Data.Bifunctor
 import Data.List
 import Test.Tasty
-import Test.Tasty.ExpectedFailure
 import Test.Tasty.HUnit
 import System.Directory
 import System.FilePath
@@ -63,8 +62,7 @@ daemonTests = testGroup "startDaemon"
 
       killThread thread
 
-  , expectFailBecause "there is a bug duplicate events from a nested dir" $
-    testGroup "when nested directories are watched"
+  , testGroup "when nested directories are watched"
       [ testCase "calls localize function only once on a file change" $ do
           let testDirectory = testRoot </> "nested_calls-localize-once"
           cleanDirectory testDirectory

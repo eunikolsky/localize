@@ -16,6 +16,7 @@ import Control.Monad (forM_, forever, unless, when)
 import Data.Aeson
 import Data.Map.Strict (Map)
 import Data.String (IsString)
+import Data.Text (Text)
 import GHC.Generics
 import System.Directory (doesFileExist, listDirectory, createDirectoryIfMissing)
 import System.Exit (die)
@@ -26,6 +27,7 @@ import System.IO (hPutStrLn, stderr)
 import qualified Data.Aeson.Encode.Pretty as AP
 import qualified Data.ByteString.Lazy.Char8 as C (ByteString, readFile, writeFile)
 import qualified Data.Map.Strict as M
+import qualified Data.Text as T (unpack)
 
 import JSON (localizeValue)
 
@@ -48,6 +50,21 @@ parseConfig file = do
     Right config -> pure config
     Left err -> die $ "Error parsing config file: " ++ err
 
+-- | In the given directory, watch non-recursively for any 'Added' and 'Modified' events
+-- (but ignore 'Removed' events) for files with the given file extension. This is a
+-- non-recursive version of 'System.FSNotify.Devel.treeExtExists'.
+dirExtExists :: WatchManager
+  -> FilePath -- ^ Directory to watch
+  -> Text -- ^ extension
+  -> (FilePath -> IO ()) -- ^ action to run on file
+  -> IO StopListening
+dirExtExists man dir ext action =
+  watchDir man dir (existsEvents $ hasThisExtension ext) (doAllEvents action)
+
+-- | Checks whether the 'FilePath' has the 'ext' extension.
+hasThisExtension :: Text -> FilePath -> Bool
+hasThisExtension ext = (== T.unpack ext) . takeExtension
+
 type LocalizeJSON = String -> FilePath -> IO ()
 
 -- | Starts a daemon that monitors for changes in all json files in the given @watchDirs@ (keys),
@@ -60,11 +77,9 @@ startDaemon localize (Config { watchDirs = dirs }) = do
   -- localize the files in the directory at startup to make sure we're up-to-date
   localizeAll
 
-  -- FIXME this produces duplicate events for files in a subdirectory when both it and its parent
-  -- directory are being watched.
   withManagerConf config $ \mgr -> do
     forM_ (M.toList dirs) $
-      \(dir, outputDir) -> treeExtExists mgr dir jsonExt (localize outputDir)
+      \(dir, outputDir) -> dirExtExists mgr dir jsonExt (localize outputDir)
 
     blockForever
 
@@ -81,7 +96,7 @@ startDaemon localize (Config { watchDirs = dirs }) = do
 
     localizeAll = forM_ (M.toList dirs) $ \(dir, outputDir) -> do
       files <- listDirectory dir
-      let jsons = fmap (dir </>) . filter ((== jsonExt) . takeExtension) $ files
+      let jsons = fmap (dir </>) . filter (hasThisExtension jsonExt) $ files
       mapM_ (localize outputDir) jsons
 
 -- | Waits until the user hits @Ctrl+c@.
