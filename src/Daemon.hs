@@ -43,7 +43,7 @@ instance FromJSON Config
 parseConfig :: FilePath -> IO Config
 parseConfig file = do
   exists <- doesFileExist file
-  unless exists . die $ "Can't find config file: " ++ file
+  unless exists . die $ "Can't find config file " ++ file
 
   eitherConfig <- eitherDecodeFileStrict' file
   case eitherConfig of
@@ -110,7 +110,7 @@ localizeJSON outputDir file = do
   eitherValue <- eitherDecodeFileStrict' file
   case eitherValue of
     Right value -> writeFileIfChanged (replaceDirectory file outputDir) . jq $ localizeValue value
-    Left err -> hPutStrLn stderr err
+    Left err -> hPutStrLn stderr . mconcat $ ["Couldn't decode JSON in file ", file, ": ", err]
 
 -- | Writes @bs@ to the @file@ only if current contents are different.
 writeFileIfChanged :: FilePath -> C.ByteString -> IO ()
