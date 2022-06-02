@@ -58,11 +58,12 @@ $ echo -n 'ёHello\\nworld \\r\\"$xyz\\" ёё {{foo_BAR}} ❓🚜 й ❄' | loca
 A sample `vim` macro `s` to localize a json string (within quotes `"`):
 
 ```vim
-let @s='vi""0y:let @0=system("localize", @0)
-vi""0pn'
+let @s='vi""0y:let @0=system("localize", @0)vi""0pn'
 ```
 
-To use it, place the curson inside a string within `"` and press `@s`.
+(There is a `CR` character between `@0)` and `vi""` in the command above, not `LF`, which may be incorrectly rendered by a newline in some software. You can type it with [`<C-V><C-M>` in `vim`](https://stackoverflow.com/a/1585463), it looks like `^M`.)
+
+To use it, place the cursor inside a string within `"` and press `@s`.
 
 ### Daemon mode
 
