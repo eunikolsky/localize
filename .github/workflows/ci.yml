@@ -39,7 +39,7 @@ jobs:
             ${{ runner.os }}-stack-work-
 
       - name: Build
-        run: stack build --system-ghc
+        run: stack build --system-ghc --test --no-run-tests
 
       - name: Test
         run: stack test --system-ghc
