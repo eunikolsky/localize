@@ -4,6 +4,11 @@ name: CI
 
 on:
   push:
+    branches:
+      - '**'
+    tags-ignore:
+      # `release.yml` handles version tags; no need for duplicate work
+      - "v*"
   pull_request:
 
 jobs:
