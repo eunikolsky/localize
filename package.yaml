@@ -1,5 +1,5 @@
 name:                localize
-version:             0.4.0.0
+version:             0.4.1.0
 github:              "eunikolsky/localize"
 license:             BSD3
 author:              "Eugene Nikolsky"
@@ -35,6 +35,7 @@ library:
   - filepath
   - fsnotify
   - megaparsec
+  - transformers
 
 executables:
   localize:

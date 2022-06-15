@@ -80,7 +80,9 @@ The directories to watch are specified with a config file; you can use [`config.
 }
 ```
 
-Here the `lang/en` and `src/locales/en` directories are watched (non-recursively) and a localized JSON file from from `lang/en/` is saved into `lang/fake/` with the original name, the same for `src/locales/en/` => `src/locales/fake/`. Note that relative paths are resolved relative to the current directory.
+Here the `lang/en` and `src/locales/en` directories are watched (non-recursively) and a localized JSON file from from `lang/en/` is saved into `lang/fake/` with the original name, the same for `src/locales/en/` => `src/locales/fake/`. Note that relative paths are resolved relative to the current directory. If the source file changes in a way that wouldn't change the already localized output file (e.g., only formatting was updated), then the output file isn't rewritten.
+
+Localization of files is done sequentially for now because it's simpler to implement (no need to keep track if another thread is localizing the same file at the moment). This is fine for occasionally changing, medium-sized files.
 
 To start this mode, use the `-d` option:
 
