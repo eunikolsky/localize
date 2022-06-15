@@ -28,6 +28,7 @@ jobs:
           path: ~/.stack
           key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
           restore-keys: |
+            ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-
             ${{ runner.os }}-stack-global-
 
       - uses: actions/cache@v3
@@ -36,6 +37,8 @@ jobs:
           path: .stack-work
           key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
           restore-keys: |
+            ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-
+            ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-
             ${{ runner.os }}-stack-work-
 
       - name: Build
