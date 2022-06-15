@@ -15,7 +15,7 @@ import Control.Concurrent.Chan (Chan, dupChan, newChan, readChan)
 import Control.DeepSeq (deepseq)
 import Control.Monad (forM_, forever, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT(..), runExceptT)
+import Control.Monad.Trans.Except (ExceptT(..), runExceptT, withExceptT)
 import Data.Aeson
 import Data.List (isSuffixOf)
 import Data.Map.Strict (Map)
@@ -128,10 +128,9 @@ localizeJSON dirs file = do
   err <- runExceptT $ do
     inputDir <- liftIO $ takeDirectory <$> makeRelativeToCurrentDirectory file
     outputDir <- ExceptT . pure $ M.lookup inputDir dirs <??> ("Can't find output directory for " <> file)
-    eitherValue <- liftIO $ eitherDecodeFileStrict' file
-    case eitherValue of
-      Right value -> liftIO $ writeFileIfChanged (replaceDirectory file outputDir) . jq $ localizeValue value
-      Left err -> ExceptT . pure . Left . mconcat $ ["Couldn't decode JSON in file ", file, ": ", err]
+    value <- withExceptT (\err -> mconcat ["Couldn't decode JSON in file ", file, ": ", err])
+      . ExceptT $ eitherDecodeFileStrict' file
+    liftIO . writeFileIfChanged (replaceDirectory file outputDir) . jq $ localizeValue value
   either (hPutStrLn stderr) pure err
 
 -- | Annotates the @Nothing@ case with @error@.
