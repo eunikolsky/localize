@@ -38,6 +38,9 @@ localizeTests = testGroup "localize"
   , testCase "preserves React-style placeholders" $
       localize "Hello {{wor_LD}}\\\" {{count}}" @?= "{{count}} \\\"{{wor_LD}} OLLEh"
 
+  , testCase "preserves React-style placeholders with unescaping" $
+      localize "Hello {{- wor_LD}}\\\" {{- count}}" @?= "{{- count}} \\\"{{- wor_LD}} OLLEh"
+
   , testCase "ignores incomplete React-style placeholders" $
       localize "Hello {{wor_{{LD}}\\\" {{count" @?= "TNUOC{{ \\\"{{wor_{{LD}} OLLEh"
 
