@@ -100,12 +100,12 @@ True to the [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy) ("D
 * Unicode grapheme clusters aren't processed correctly; the constituent codepoints are reversed instead of staying as a single cluster:
 
     ```bash
+    $ echo -n '❄️  á' | iconv -t utf-16be | xxd
+    00000000: 2744 fe0f 0020 0020 0061 0301            'D... . .a..
     $ echo -n '❄️  á' | localize
     A  ️❄
-    $ echo -n '❄️  á' | xxd
-    00000000: e29d 84ef b88f 2020 61cc 81              ......  a..
-    $ echo -n '❄️  á' | localize | xxd
-    00000000: cc81 4120 20ef b88f e29d 84              ..A  ......
+    $ echo -n '❄️  á' | localize | iconv -t utf-16be | xxd
+    00000000: 0301 0041 0020 0020 fe0f 2744            ...A. . ..'D
     ```
 
 ## Technical details
