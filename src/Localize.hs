@@ -11,7 +11,7 @@ import Data.Function ((&))
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, concat, intercalate, pack, singleton)
 import Data.Void (Void)
-import Text.Megaparsec hiding (Token)
+import Text.Megaparsec
 import Text.Megaparsec.Char (char, letterChar, string)
 
 -- | Type of parsers used here: works on @Text@s and doesn't
@@ -19,12 +19,12 @@ import Text.Megaparsec.Char (char, letterChar, string)
 type Parser = Parsec Void Text
 
 -- | Represents an individual part of the incoming string.
-data Token
-  = TokChar Char    -- ^ A char that will be flipped and reversed.
-  | TokString Text  -- ^ An immutable string that will be kept as is.
+data InputToken
+  = ITokChar Char    -- ^ A char that will be flipped and reversed.
+  | ITokString Text  -- ^ An immutable string that will be kept as is.
 
 -- | A list of tokens located between @tokenGroupSeparator@s.
-newtype TokenGroup = TokenGroup { unTokenGroup :: [Token] }
+newtype InputTokenGroup = InputTokenGroup { unTokenGroup :: [InputToken] }
 
 -- | The pipe @|@ separator of token groups for PHP.
 tokenGroupSeparator :: Char
@@ -37,36 +37,36 @@ tokenGroupSeparator = '|'
 localize :: Text -> Text
 localize = intercalate (singleton tokenGroupSeparator) . fmap processGroup . parseString
   where
-    processGroup :: TokenGroup -> Text
+    processGroup :: InputTokenGroup -> Text
     processGroup = concat . fmap flipCase . reverse . unTokenGroup
 
 -- | Parses the input string into a list of token groups.
-parseString :: Text -> [TokenGroup]
+parseString :: Text -> [InputTokenGroup]
 parseString s = parseMaybe (tokenGroup `sepBy` char tokenGroupSeparator) s
   -- I don't expect this parser to fail on any input, but if it does,
   -- leave the input as is.
-  & or [TokenGroup [TokString s]]
+  & or [InputTokenGroup [ITokString s]]
   where
-    tokenGroup :: Parser TokenGroup
-    tokenGroup = TokenGroup <$> many token
+    tokenGroup :: Parser InputTokenGroup
+    tokenGroup = InputTokenGroup <$> many token
 
-    token :: Parser Token
+    token :: Parser InputToken
     token
-      = TokString <$> try (choice
+      = ITokString <$> try (choice
         [ jsonEscapedChar
         , phpStylePlaceholder
         , reactStylePlaceholder
         , countPHPPlaceholder
         ])
-      <|> TokChar <$> anySingleBut tokenGroupSeparator
+      <|> ITokChar <$> anySingleBut tokenGroupSeparator
 
     or = fromMaybe
 
 -- | Flips the case of the given token.
-flipCase :: Token -> Text
-flipCase (TokChar c) = singleton $ flip c
+flipCase :: InputToken -> Text
+flipCase (ITokChar c) = singleton $ flip c
   where flip c = (if isLower c then toUpper else toLower) c
-flipCase (TokString s) = s
+flipCase (ITokString s) = s
 
 -- | Parses a subset of the allowed escaped characters in JSON.
 jsonEscapedChar :: Parser Text
