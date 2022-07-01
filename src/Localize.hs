@@ -14,7 +14,7 @@ import Data.Text.ICU hiding (toLower, toUpper)
 import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char (char, letterChar, string)
-import qualified Data.Text as T (length)
+import qualified Data.Text as T (head, length)
 
 -- | Type of parsers used here: works on @Text@s and doesn't
 -- have any special errors.
@@ -37,17 +37,23 @@ tokenGroupSeparator = '|'
 -- PHP-style placeholders (`$foo_BAR`) and React-style placeholders
 -- (`{{foo_BAR}}`) are preserved as is.
 localize :: Text -> Text
-localize t = concat . reverse <$> graphemeClusters t
+localize t = processGroup <$> graphemeClusters t
   ?? (intercalate (singleton tokenGroupSeparator) . fmap processGroup . parseString) t
   where
-    graphemeClusters :: Text -> Maybe [Text]
+    graphemeClusters :: Text -> Maybe InputTokenGroup
     graphemeClusters t = let chars = brkBreak <$> breaks (breakCharacter Current) t
       in if any isGraphemeCluster chars
-        then Just chars
+        then Just . InputTokenGroup . fmap tokenFromGraphemeCluster $ chars
         else Nothing
 
     isGraphemeCluster :: Text -> Bool
     isGraphemeCluster = (> 1) . T.length
+
+    tokenFromGraphemeCluster :: Text -> InputToken
+    tokenFromGraphemeCluster t
+      | isGraphemeCluster t = ITokString t
+      | T.length t == 1 = ITokChar $ T.head t
+      | otherwise = error "tokenFromGraphemeCluster: can't have empty text"
 
     processGroup :: InputTokenGroup -> Text
     processGroup = concat . fmap flipCase . reverse . unTokenGroup
