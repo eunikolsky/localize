@@ -82,7 +82,7 @@ daemonTests = testGroup "startDaemon"
           writeFile (testDirectory </> "dir/nested/1.json") "[]"
           -- 300 ms to wait for any watched localize calls in response to the file change
           -- it's bigger than the debounce period of 100 ms in 'startDaemon'
-          threadDelay 300000
+          threadDelay 500000 -- FIXME refactor to a polling call
 
           callCount <- readTVarIO callCountVar
           callCount @?= 1
