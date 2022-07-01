@@ -8,11 +8,13 @@ import Prelude hiding (concat)
 
 import Data.Char (isLower, toLower, toUpper)
 import Data.Function ((&))
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Text (Text, concat, intercalate, pack, singleton)
+import Data.Text.ICU hiding (toLower, toUpper)
 import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char (char, letterChar, string)
+import qualified Data.Text as T (length)
 
 -- | Type of parsers used here: works on @Text@s and doesn't
 -- have any special errors.
@@ -35,8 +37,18 @@ tokenGroupSeparator = '|'
 -- PHP-style placeholders (`$foo_BAR`) and React-style placeholders
 -- (`{{foo_BAR}}`) are preserved as is.
 localize :: Text -> Text
-localize = intercalate (singleton tokenGroupSeparator) . fmap processGroup . parseString
+localize t = graphemeCluster t
+  ?? (intercalate (singleton tokenGroupSeparator) . fmap processGroup . parseString) t
   where
+    graphemeCluster :: Text -> Maybe Text
+    graphemeCluster t = let chars = brkBreak <$> breaks (breakCharacter Current) t
+      in if any isGraphemeCluster chars
+        then listToMaybe chars
+        else Nothing
+
+    isGraphemeCluster :: Text -> Bool
+    isGraphemeCluster = (> 1) . T.length
+
     processGroup :: InputTokenGroup -> Text
     processGroup = concat . fmap flipCase . reverse . unTokenGroup
 
@@ -45,7 +57,7 @@ parseString :: Text -> [InputTokenGroup]
 parseString s = parseMaybe (tokenGroup `sepBy` char tokenGroupSeparator) s
   -- I don't expect this parser to fail on any input, but if it does,
   -- leave the input as is.
-  & or [InputTokenGroup [ITokString s]]
+  ?? [InputTokenGroup [ITokString s]]
   where
     tokenGroup :: Parser InputTokenGroup
     tokenGroup = InputTokenGroup <$> many token
@@ -60,7 +72,9 @@ parseString s = parseMaybe (tokenGroup `sepBy` char tokenGroupSeparator) s
         ])
       <|> ITokChar <$> anySingleBut tokenGroupSeparator
 
-    or = fromMaybe
+(??) :: Maybe a -> a -> a
+Just x ?? _ = x
+Nothing ?? x = x
 
 -- | Flips the case of the given token.
 flipCase :: InputToken -> Text

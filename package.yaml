@@ -35,6 +35,7 @@ library:
   - filepath
   - fsnotify
   - megaparsec
+  - text-icu
   - transformers
 
 executables:
@@ -65,3 +66,4 @@ tests:
     - stm
     - tasty
     - tasty-hunit
+    - unicode-show
