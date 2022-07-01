@@ -36,22 +36,22 @@ localizeTests = testGroup "localize"
       localize "0_- !?%8" @?= "8%?! -_0"
 
   , testCase "preserves escaped characters" $
-      localize "\\tHello\\r\\n \\\"World\\\"\\b\\\\" @?= "\\\\\\b\\\"DLROw\\\" \\n\\rOLLEh\\t"
+      localize [r|\tHello\r\n \"World\"\b\\|] @?= [r|\\\b\"DLROw\" \n\rOLLEh\t|]
 
   , testCase "preserves PHP-style placeholders" $
-      localize "Hello ($wor_LD\\\") $y" @?= "$y )\\\"$wor_LD( OLLEh"
+      localize [r|Hello ($wor_LD\") $y|] @?= [r|$y )\"$wor_LD( OLLEh|]
 
   , testCase "preserves React-style placeholders" $
-      localize "Hello {{wor_LD}}\\\" {{count}}" @?= "{{count}} \\\"{{wor_LD}} OLLEh"
+      localize [r|Hello {{wor_LD}}\" {{count}}|] @?= [r|{{count}} \"{{wor_LD}} OLLEh|]
 
   , testCase "preserves React-style placeholders with unescaping" $
-      localize "Hello {{- wor_LD}}\\\" {{- count}}" @?= "{{- count}} \\\"{{- wor_LD}} OLLEh"
+      localize [r|Hello {{- wor_LD}}\" {{- count}}|] @?= [r|{{- count}} \"{{- wor_LD}} OLLEh|]
 
   , testCase "ignores incomplete React-style placeholders" $
-      localize "Hello {{wor_{{LD}}\\\" {{count" @?= "TNUOC{{ \\\"{{wor_{{LD}} OLLEh"
+      localize [r|Hello {{wor_{{LD}}\" {{count|] @?= [r|TNUOC{{ \"{{wor_{{LD}} OLLEh|]
 
   , testCase "preserves unicode characters" $
-      localize "ёHello world \\\"$xyz\\\" ёЁ ❓🚜 й ❄" @?= "❄ Й 🚜❓ ёЁ \\\"$xyz\\\" DLROW OLLEhЁ"
+      localize [r|ёHello world \"$xyz\" ёЁ ❓🚜 й ❄|] @?= [r|❄ Й 🚜❓ ёЁ \"$xyz\" DLROW OLLEhЁ|]
 
   , testCase "preserves %count% PHP placeholders" $
       localize "Hello %count% world" @?= "DLROW %count% OLLEh"
