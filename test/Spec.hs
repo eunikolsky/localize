@@ -84,9 +84,12 @@ localize' :: Text -> UnicodePrintingText
 localize' = UnicodePrintingText . localize
 
 graphemeClustersSupportTests :: TestTree
-graphemeClustersSupportTests = testGroup "grapheme clusters support"
+graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
   [ testCase "returns a single grapheme cluster as is" $
       localize' "❄️" @?= "❄️"
+
+  , testCase "reverses the order of multiple grapheme clusters" $
+      localize' "❄️~̲♥︎" @?= "♥︎~̲❄️"
   ]
 
 localizeValueTests :: TestTree

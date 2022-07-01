@@ -37,13 +37,13 @@ tokenGroupSeparator = '|'
 -- PHP-style placeholders (`$foo_BAR`) and React-style placeholders
 -- (`{{foo_BAR}}`) are preserved as is.
 localize :: Text -> Text
-localize t = graphemeCluster t
+localize t = concat . reverse <$> graphemeClusters t
   ?? (intercalate (singleton tokenGroupSeparator) . fmap processGroup . parseString) t
   where
-    graphemeCluster :: Text -> Maybe Text
-    graphemeCluster t = let chars = brkBreak <$> breaks (breakCharacter Current) t
+    graphemeClusters :: Text -> Maybe [Text]
+    graphemeClusters t = let chars = brkBreak <$> breaks (breakCharacter Current) t
       in if any isGraphemeCluster chars
-        then listToMaybe chars
+        then Just chars
         else Nothing
 
     isGraphemeCluster :: Text -> Bool
@@ -75,6 +75,8 @@ parseString s = parseMaybe (tokenGroup `sepBy` char tokenGroupSeparator) s
 (??) :: Maybe a -> a -> a
 Just x ?? _ = x
 Nothing ?? x = x
+
+infixl 3 ??
 
 -- | Flips the case of the given token.
 flipCase :: InputToken -> Text
