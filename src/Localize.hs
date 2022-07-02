@@ -87,10 +87,11 @@ infixl 3 ??
 
 -- | Flips the case of the given token.
 flipCase :: InputToken -> Text
-flipCase (ITokChar c) = singleton $ flip c
-  where flip c = (if isLower c then toUpper else toLower) c
-flipCase (ITokString s) = s
-flipCase (ITokGraphemeCluster t) = T.map flip t
+flipCase t = case t of
+  ITokChar c -> singleton $ flip c
+  ITokString s -> s
+  ITokGraphemeCluster t -> T.map flip t
+
   where flip c = (if isLower c then toUpper else toLower) c
 
 -- | Parses a subset of the allowed escaped characters in JSON.
