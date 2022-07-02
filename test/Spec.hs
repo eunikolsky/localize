@@ -91,6 +91,9 @@ graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
   , testCase "reverses the order of multiple grapheme clusters" $
       localize' "❄️~̲♥︎" @?= "♥︎~̲❄️"
 
+  , testCase "flips case of grapheme clusters" $
+      localize' "❄️á♥︎E̺͆" @?= "e̺͆♥︎Á❄️"
+
   , testCase "reverses and flips case of graphemes" $
       localize' "a❄️ ~̲X0 ♥︎_D" @?= "d_♥︎ 0x~̲ ❄️A"
   ]

@@ -25,6 +25,9 @@ dependencies:
 - bytestring
 - text
 
+ghc-options:
+- -Werror=incomplete-patterns
+
 library:
   source-dirs: src
   dependencies:

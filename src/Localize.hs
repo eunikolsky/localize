@@ -14,7 +14,7 @@ import Data.Text.ICU hiding (toLower, toUpper)
 import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char (char, letterChar, string)
-import qualified Data.Text as T (head, length)
+import qualified Data.Text as T (head, length, map)
 
 -- | Type of parsers used here: works on @Text@s and doesn't
 -- have any special errors.
@@ -24,6 +24,7 @@ type Parser = Parsec Void Text
 data InputToken
   = ITokChar Char    -- ^ A char that will be flipped and reversed.
   | ITokString Text  -- ^ An immutable string that will be kept as is.
+  | ITokGraphemeCluster Text -- ^ A user-visible character that can be flipped, but the codepoints are _not_ reversed.
 
 -- | A list of tokens located between @tokenGroupSeparator@s.
 newtype InputTokenGroup = InputTokenGroup { unTokenGroup :: [InputToken] }
@@ -51,7 +52,7 @@ localize t = processGroup <$> graphemeClusters t
 
     tokenFromGraphemeCluster :: Text -> InputToken
     tokenFromGraphemeCluster t
-      | isGraphemeCluster t = ITokString t
+      | isGraphemeCluster t = ITokGraphemeCluster t
       | T.length t == 1 = ITokChar $ T.head t
       | otherwise = error "tokenFromGraphemeCluster: can't have empty text"
 
@@ -89,6 +90,8 @@ flipCase :: InputToken -> Text
 flipCase (ITokChar c) = singleton $ flip c
   where flip c = (if isLower c then toUpper else toLower) c
 flipCase (ITokString s) = s
+flipCase (ITokGraphemeCluster t) = T.map flip t
+  where flip c = (if isLower c then toUpper else toLower) c
 
 -- | Parses a subset of the allowed escaped characters in JSON.
 jsonEscapedChar :: Parser Text
