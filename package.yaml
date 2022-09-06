@@ -27,6 +27,7 @@ dependencies:
 
 ghc-options:
 - -Werror=incomplete-patterns
+- -Werror=missing-methods
 
 library:
   source-dirs: src

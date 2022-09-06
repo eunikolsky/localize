@@ -83,6 +83,7 @@ instance IsString UnicodePrintingText where
 localize' :: Text -> UnicodePrintingText
 localize' = UnicodePrintingText . localize
 
+-- TODO benchmark
 graphemeClustersSupportTests :: TestTree
 graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
   [ testCase "returns a single grapheme cluster as is" $
@@ -96,6 +97,9 @@ graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
 
   , testCase "reverses and flips case of graphemes" $
       localize' "a❄️ ~̲X0 ♥︎_D" @?= "d_♥︎ 0x~̲ ❄️A"
+
+  , testCase "preserves escaped characters" $
+      localize' [r|\tHello❄️\r\n \"áWorld\"\b♥︎\\|] @?= [r|\\♥︎\b\"DLROwÁ\" \n\r❄️OLLEh\t|]
   ]
 
 localizeValueTests :: TestTree
