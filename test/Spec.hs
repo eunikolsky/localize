@@ -100,6 +100,10 @@ graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
 
   , testCase "preserves escaped characters" $
       localize' [r|\tHello❄️\r\n \"áWorld\"\b♥︎\\|] @?= [r|\\♥︎\b\"DLROwÁ\" \n\r❄️OLLEh\t|]
+
+-- TODO test these:
+--"👩‍💻🏴‍☠️🏳️‍🌈👩‍🚀"
+--"🤦🏼‍♂️"
   ]
 
 localizeValueTests :: TestTree

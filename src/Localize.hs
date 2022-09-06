@@ -159,6 +159,7 @@ flipCase t = case t of
     flip = mapUChar (\c -> (if isLower c then toUpper else toLower) c)
 
 -- | Parses a subset of the allowed escaped characters in JSON.
+-- FIXME this should be handled by json parser
 jsonEscapedChar :: Parser UText
 jsonEscapedChar = do
   backslash <- pChar '\\'
