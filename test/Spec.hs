@@ -83,7 +83,6 @@ instance IsString UnicodePrintingText where
 localize' :: Text -> UnicodePrintingText
 localize' = UnicodePrintingText . localize
 
--- TODO benchmark
 graphemeClustersSupportTests :: TestTree
 graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
   [ testCase "returns a single grapheme cluster as is" $

@@ -71,3 +71,12 @@ tests:
     - tasty
     - tasty-hunit
     - unicode-show
+
+benchmarks:
+  localize-benchmark:
+    main:                Benchmark.hs
+    source-dirs:         benchmark
+    dependencies:
+    - localize
+    - criterion
+    - random
