@@ -101,6 +101,24 @@ graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
   , testCase "preserves escaped characters" $
       localize' [r|\tHello❄️\r\n \"áWorld\"\b♥︎\\|] @?= [r|\\♥︎\b\"DLROwÁ\" \n\r❄️OLLEh\t|]
 
+  , testCase "preserves PHP-style placeholders" $
+      localize [r|Hello ❄️($wor_LD\"á) $y|] @?= [r|$y )Á\"$wor_LD(❄️ OLLEh|]
+
+  , testCase "preserves React-style placeholders" $
+      localize [r|ÁHello {{wor_LD}}\" ♥︎{{count}}|] @?= [r|{{count}}♥︎ \"{{wor_LD}} OLLEhá|]
+
+  , testCase "preserves React-style placeholders with unescaping" $
+      localize [r|❄️Hello {{- wor_LD}}\" ♥︎{{- count}}|] @?= [r|{{- count}}♥︎ \"{{- wor_LD}} OLLEh❄️|]
+
+  , testCase "ignores incomplete React-style placeholders" $
+      localize [r|Hello❄️ {{wor_{{LD}}\" á{{count|] @?= [r|TNUOC{{Á \"{{wor_{{LD}} ❄️OLLEh|]
+
+  , testCase "preserves %count% PHP placeholders" $
+      localize "Hello á%count%♥︎ world" @?= "DLROW ♥︎%count%Á OLLEh"
+
+  , testCase "keeps the order of groups separated by pipe" $
+      localize "Hello ONE world?❄️ $foo|áHello %count% worlds!|othÁer♥︎" @?= "$foo ❄️?DLROW eno OLLEh|!SDLROW %count% OLLEhÁ|♥︎REáHTO"
+
 -- TODO test these:
 --"👩‍💻🏴‍☠️🏳️‍🌈👩‍🚀"
 --"🤦🏼‍♂️"
