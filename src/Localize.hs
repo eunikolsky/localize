@@ -105,22 +105,20 @@ localize = intercalate (T.singleton tokenGroupSeparator) . fmap processGroup . p
 toUText :: Text -> UText
 toUText = UText . fmap (uCharFromBreak . brkBreak) . breaks (breakCharacter Current)
 
--- TODO reuse existing parsers for UChar/UText
 pChar :: Char -> Parser UChar
-pChar c = token test (Set.singleton . Tokens . nes . Grapheme $ c)
-  where
-    test x@(Grapheme g) = if c == g then Just x else Nothing
-    test (GraphemeCluster _) = Nothing
-    nes = (:| [])
+pChar = single . Grapheme
 
 pLetterChar :: Parser UChar
-pLetterChar = token test Set.empty <?> "letter char"
+pLetterChar =
+  -- this implementation is adapted from `megaparsec`
+  -- (`Grapheme <$> letterChar` doesn't work)
+  satisfy isLetter' <?> "letter"
   where
-    test x@(Grapheme g) = if isLetter g then Just x else Nothing
-    test (GraphemeCluster _) = Nothing
+    isLetter' x@(Grapheme g) = isLetter g
+    isLetter' (GraphemeCluster _) = False
 
 pString :: String -> Parser UText
-pString = fmap UText . string . (\(UText t) -> t) . toUText . pack
+pString = fmap UText . chunk . fmap Grapheme
 
 -- | Parses the input string into a list of token groups.
 parseString :: UText -> [InputTokenGroup]
