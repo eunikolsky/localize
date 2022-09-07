@@ -92,6 +92,22 @@ graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
   , testCase "reverses the order of multiple grapheme clusters" $
       localize' "❄️~̲♥︎" @?= "♥︎~̲❄️"
 
+  , testCase "understands extended grapheme clusters" $ do
+      -- https://medium.com/pragmatic-programmers/pure-print-style-debugging-in-haskell-c4c5d4f39afa
+      -- four visible characters here
+
+      -- ghc error "lexical error in string/character literal at character '\8205'"
+      -- https://gitlab.haskell.org/ghc/ghc/-/issues/21228
+      --localize' "👩‍💻🏴‍☠️🏳️‍🌈👩‍🚀" @?= "👩‍🚀🏳️‍🌈🏴‍☠️👩‍💻"
+
+      localize' "👩\8205💻🏴\8205☠️🏳️\8205🌈👩\8205🚀" @?= "👩\8205🚀🏳️\8205🌈🏴\8205☠️👩\8205💻"
+
+      -- https://hsivonen.fi/string-length/
+      -- one visible character here
+      --localize' "🤦🏼‍♂️" @?= "🤦🏼‍♂️"
+
+      localize' "🤦🏼\8205♂️" @?= "🤦🏼\8205♂️"
+
   , testCase "flips case of grapheme clusters" $
       localize' "❄️á♥︎E̺͆" @?= "e̺͆♥︎Á❄️"
 
@@ -118,10 +134,6 @@ graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
 
   , testCase "keeps the order of groups separated by pipe" $
       localize "Hello ONE world?❄️ $foo|áHello %count% worlds!|othÁer♥︎" @?= "$foo ❄️?DLROW eno OLLEh|!SDLROW %count% OLLEhÁ|♥︎REáHTO"
-
--- TODO test these:
---"👩‍💻🏴‍☠️🏳️‍🌈👩‍🚀"
---"🤦🏼‍♂️"
   ]
 
 localizeValueTests :: TestTree
