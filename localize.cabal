@@ -33,7 +33,7 @@ library
       Paths_localize
   hs-source-dirs:
       src
-  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods
+  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods -Wmissing-signatures
   build-depends:
       aeson
     , aeson-pretty
@@ -45,9 +45,11 @@ library
     , filepath
     , fsnotify
     , megaparsec
+    , mtl
     , text
     , text-icu
     , transformers
+    , unordered-containers
   default-language: Haskell2010
 
 executable localize
@@ -56,7 +58,7 @@ executable localize
       Paths_localize
   hs-source-dirs:
       app
-  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods -Wmissing-signatures -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -74,7 +76,7 @@ test-suite localize-test
       Paths_localize
   hs-source-dirs:
       test
-  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods -Wmissing-signatures -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -82,6 +84,7 @@ test-suite localize-test
     , directory
     , filepath
     , localize
+    , mtl
     , raw-strings-qq
     , stm
     , tasty
@@ -97,7 +100,7 @@ benchmark localize-benchmark
       Paths_localize
   hs-source-dirs:
       benchmark
-  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods
+  ghc-options: -Werror=incomplete-patterns -Werror=missing-methods -Wmissing-signatures
   build-depends:
       aeson
     , base >=4.7 && <5

@@ -28,6 +28,7 @@ dependencies:
 ghc-options:
 - -Werror=incomplete-patterns
 - -Werror=missing-methods
+- -Wmissing-signatures
 
 library:
   source-dirs: src
@@ -39,8 +40,10 @@ library:
   - filepath
   - fsnotify
   - megaparsec
+  - mtl
   - text-icu
   - transformers
+  - unordered-containers
 
 executables:
   localize:
@@ -66,6 +69,7 @@ tests:
     - localize
     - directory
     - filepath
+    - mtl
     - raw-strings-qq
     - stm
     - tasty

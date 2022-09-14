@@ -3,6 +3,7 @@ module DaemonSpec where
 import Control.Concurrent
 import Control.Concurrent.STM.TVar
 import Control.Monad
+import Control.Monad.IO.Class
 import Control.Monad.STM
 import Data.Bifunctor
 import Data.List
@@ -96,7 +97,7 @@ wrapInQuotes s = "\"" ++ s ++ "\""
 
 -- | Counts the calls to the 'localizeJSON' function.
 fakeLocalizeJSON :: TVar Int -> LocalizeJSON
-fakeLocalizeJSON callCount = const . const . void . atomically $ modifyTVar' callCount (+1)
+fakeLocalizeJSON callCount = const . const . void . liftIO . atomically $ modifyTVar' callCount (+1)
 
 assertDirectoriesExist :: [FilePath] -> Assertion
 assertDirectoriesExist = mapM_ $ \path ->

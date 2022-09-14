@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
+import Control.Monad.State.Strict
 import Data.Aeson
 import Data.List (unwords)
 import Data.Maybe (fromJust)
@@ -14,7 +15,7 @@ import Text.Show.Unicode (ushow)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 
-import JSON (localizeValue)
+import JSON (emptyCache, localizeValue)
 import Localize (localize)
 import DaemonSpec (daemonTests)
 
@@ -138,10 +139,10 @@ graphemeClustersSupportTests = testGroup "when grapheme clusters are present"
 localizeValueTests :: TestTree
 localizeValueTests = testGroup "localizeValue"
   [ testCase "returns empty value for empty value" $
-      localizeValue (forceDecode "{}") @?= forceDecode "{}"
+      localizeValueNoCache (forceDecode "{}") @?= forceDecode "{}"
 
   , testCase "localizes all string values" $
-      localizeValue (forceDecode [r|
+      localizeValueNoCache (forceDecode [r|
           { "foo": "Foo", "bar": "BAR",
             "array": [ "Hello", "World!" ],
             "nested": { "object": { "here": "Object" } }
@@ -154,10 +155,10 @@ localizeValueTests = testGroup "localizeValue"
       |]
 
   , testCase "localizes raw string" $
-    localizeValue (forceDecode [r|"foo BAR"|]) @?= forceDecode [r|"rab OOF"|]
+    localizeValueNoCache (forceDecode [r|"foo BAR"|]) @?= forceDecode [r|"rab OOF"|]
 
   , testCase "preserves non-string types" $
-    localizeValue (forceDecode [r|
+    localizeValueNoCache (forceDecode [r|
         { "foo": 3.1415,
           "bar": "bar",
           "array": [ "HELLO", true ],
@@ -171,6 +172,10 @@ localizeValueTests = testGroup "localizeValue"
         }
     |]
   ]
+
+-- | Wraps 'localizeValue' to ignore the cache.
+localizeValueNoCache :: Value -> Value
+localizeValueNoCache = flip evalState emptyCache . localizeValue
 
 forceDecode :: BL.ByteString -> Value
 forceDecode = fromJust . decode

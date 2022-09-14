@@ -15,6 +15,7 @@ import Control.Concurrent.Chan (Chan, dupChan, newChan, readChan)
 import Control.DeepSeq (deepseq)
 import Control.Monad (forM_, forever, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.State.Strict
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, withExceptT)
 import Data.Aeson
 import Data.List (isSuffixOf)
@@ -33,7 +34,7 @@ import qualified Data.ByteString.Lazy.Char8 as C (ByteString, readFile, writeFil
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T (unpack)
 
-import JSON (localizeValue)
+import JSON (LocalizeCache, localizeValue, emptyCache)
 
 type WatchDirs = Map FilePath FilePath
 
@@ -71,7 +72,7 @@ dirExtExistsChan man dir ext =
 hasThisExtension :: Text -> FilePath -> Bool
 hasThisExtension ext = (== T.unpack ext) . takeExtension
 
-type LocalizeJSON = WatchDirs -> FilePath -> IO ()
+type LocalizeJSON = WatchDirs -> FilePath -> StateT LocalizeCache IO ()
 
 -- | Starts a daemon that monitors for changes in all json files in the given @watchDirs@ (keys),
 -- localizes all the strings in the files on every change, and writes the result to the
@@ -82,14 +83,16 @@ startDaemon localize (Config { watchDirs = watchDirs }) = do
   let dirs = normalizeInputDirs watchDirs
   ensureOutputDirectories dirs
   -- localize the files in the directory at startup to make sure we're up-to-date
-  localizeAll dirs
+  cache <- flip execStateT emptyCache $ localizeAll dirs
 
   chan <- newChan
   withManagerConf config $ \mgr -> do
     forM_ (M.keys dirs) $ \dir ->
       dirExtExistsChan mgr dir jsonExt chan
 
-    localizeChan localize dirs chan
+    -- note: have to pass 'cache' explicitly to 'localizeChan' (instead of using
+    -- 'StateT LocalizeCache IO') because 'withManagerConf' requires an 'IO' lambda
+    localizeChan localize dirs chan cache
 
   where
     jsonExt :: IsString s => s
@@ -108,18 +111,20 @@ startDaemon localize (Config { watchDirs = watchDirs }) = do
 
     ensureOutputDirectories dirs = forM_ (M.elems dirs) $ createDirectoryIfMissing True
 
+    localizeAll :: Map FilePath FilePath -> StateT LocalizeCache IO ()
     localizeAll dirs = forM_ (M.toList dirs) $ \(dir, outputDir) -> do
-      files <- listDirectory dir
+      files <- liftIO $ listDirectory dir
       let jsons = fmap (dir </>) . filter (hasThisExtension jsonExt) $ files
       mapM_ (localize dirs) jsons
 
 -- | Localizes the files for events from @chan@ forever. This is a single-threaded operation for now
 -- because it's simpler to implement (no need to keep track if another thread is localizing the same
 -- file at the moment).
-localizeChan :: LocalizeJSON -> WatchDirs -> EventChannel -> IO ()
-localizeChan localize dirs chan = forever $ do
+localizeChan :: LocalizeJSON -> WatchDirs -> EventChannel -> LocalizeCache -> IO ()
+localizeChan localize dirs chan cache = do
   filepath <- eventPath <$> readChan chan
-  localize dirs filepath
+  newCache <- flip execStateT cache $ localize dirs filepath
+  localizeChan localize dirs chan newCache
 
 -- | Localizes all string values in the given json @file@ and writes the result to a file with
 -- the same name in the corresponding directory based on @dirs@.
@@ -129,9 +134,18 @@ localizeJSON dirs file = do
     inputDir <- liftIO $ takeDirectory <$> makeRelativeToCurrentDirectory file
     outputDir <- ExceptT . pure $ M.lookup inputDir dirs <??> ("Can't find output directory for " <> file)
     value <- withExceptT (\err -> mconcat ["Couldn't decode JSON in file ", file, ": ", err])
-      . ExceptT $ eitherDecodeFileStrict' file
-    liftIO . writeFileIfChanged (replaceDirectory file outputDir) . jq $ localizeValue value
-  either (hPutStrLn stderr) pure err
+      . ExceptT . liftIO $ eitherDecodeFileStrict' file
+    localized <- ExceptT . fmap pure . liftState $ localizeValue value
+    liftIO . writeFileIfChanged (replaceDirectory file outputDir) . jq $ localized
+  either (liftIO . hPutStrLn stderr) pure err
+
+-- FIXME this feels like a hack
+liftState :: Monad m => State s a -> StateT s m a
+liftState action = do
+  state <- get
+  let (result, newState) = runState action state
+  put newState
+  pure result
 
 -- | Annotates the @Nothing@ case with @error@.
 (<??>) :: Maybe b -> a -> Either a b
