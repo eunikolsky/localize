@@ -1,5 +1,10 @@
 # Changelog for `localize`
 
+## 0.5.0
+
+* Fix processing Unicode grapheme clusters (user-perceived characters): they are now kept as a unit (w/o reversing their codepoints) and also case-flipped if applicable.
+* Add a runtime cache for localized strings in the daemon mode for faster repetitive processing.
+
 ## 0.4.1
 
 * Fix a rare bug when the daemon would stop processing any file events after some time. Apparently this was caused by two events for the same file in quick succession and trying to write the same file from two threads. This is fixed by making the event handling single-threaded.

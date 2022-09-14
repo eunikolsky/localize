@@ -34,7 +34,7 @@ The program is installed into `~/.local/bin/` by default, so make sure it's adde
 
 ```bash
 $ localize --version
-0.3.0.0
+0.5.0.0
 ```
 
 ### Testing
@@ -82,7 +82,7 @@ The directories to watch are specified with a config file; you can use [`config.
 
 Here the `lang/en` and `src/locales/en` directories are watched (non-recursively) and a localized JSON file from from `lang/en/` is saved into `lang/fake/` with the original name, the same for `src/locales/en/` => `src/locales/fake/`. Note that relative paths are resolved relative to the current directory. If the source file changes in a way that wouldn't change the already localized output file (e.g., only formatting was updated), then the output file isn't rewritten.
 
-Localization of files is done sequentially for now because it's simpler to implement (no need to keep track if another thread is localizing the same file at the moment). This is fine for occasionally changing, medium-sized files.
+Localization of files is done sequentially for now because it's simpler to implement (no need to keep track if another thread is localizing the same file at the moment). There is a runtime cache keeping the localized strings so far for faster repetitive processing; the cache is unbounded, so it might use a lot of memory eventually, but that's not my use case. This is fine for occasionally changing, medium-sized files.
 
 To start this mode, use the `-d` option:
 
@@ -95,19 +95,17 @@ $ localize -d config.json &
 
 True to the [Unix philosophy](https://en.wikipedia.org/wiki/Unix_philosophy) ("Don't clutter output with extraneous information"), the program doesn't print anything to `stdout` when everything goes smoothly. If there is any error (for example, a failure to parse a json file), then it's printed to `stderr`.
 
-## Known issues
-
-* Unicode grapheme clusters aren't processed correctly; the constituent codepoints are reversed instead of staying as a single cluster:
-
-    ```bash
-    $ echo -n '❄️  á' | iconv -t utf-16be | xxd
-    00000000: 2744 fe0f 0020 0020 0061 0301            'D... . .a..
-    $ echo -n '❄️  á' | localize
-    A  ️❄
-    $ echo -n '❄️  á' | localize | iconv -t utf-16be | xxd
-    00000000: 0301 0041 0020 0020 fe0f 2744            ...A. . ..'D
-    ```
-
 ## Technical details
 
 The program is written in [Haskell](https://www.haskell.org/), which is an excellent choice for text processing. Specifically, it has multiple parser combinator libraries and I'm using [`megaparsec`](https://markkarpov.com/tutorial/megaparsec.html) to parse the tokens correctly. I initially tried to do manual parsing in swift, but parsing of even one kind of placeholders quickly got complicated. This task becomes much easier with a proper parser combinator library.
+
+The [`text-icu`](https://hackage.haskell.org/package/text-icu) library is used to deal with Unicode, specifically to parse the input strings into user-perceived characters (a.k.a. grapheme clusters). This allows the program to preserve complex Unicode characters as is (read more at [It’s Not Wrong that "🤦🏼‍♂️".length == 7](https://hsivonen.fi/string-length/>)):
+
+```bash
+$ echo -n '❄️  á' | iconv -t utf-16be | xxd
+00000000: 2744 fe0f 0020 0020 0061 0301            'D... . .a..
+$ echo -n '❄️  á' | localize
+Á  ❄️
+$ echo -n '❄️  á' | localize | iconv -t utf-16be | xxd
+00000000: 0041 0301 0020 0020 2744 fe0f            .A... . 'D..
+```
